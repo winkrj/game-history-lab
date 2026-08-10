@@ -12,11 +12,11 @@ The primary audience is a Java/Spring developer learning Kotlin while examining 
 
 ## Current phase
 
-Bootstrap completed on 2026-08-10. The next product task is Stage 1: Original JOIN query. No Stage 1 domain schema, seed data, query, API, or benchmark has been implemented during bootstrap.
+Stage 1 is in progress. The normalized Source schema and the Original JOIN query are implemented and verified with a small MySQL fixture. The representative HTTP API, large reproducible seed data, execution-plan capture, and performance baseline are not implemented yet.
 
-Stage 1 must establish:
+The remaining Stage 1 work must establish:
 
-- correct results from the representative API;
+- the representative API using the existing Original JOIN query;
 - reproducible data beginning around one million records;
 - baseline p95 latency, throughput, SQL execution plan, rows read, and resource usage;
 - evidence of the JOIN bottleneck, or evidence supporting a larger data set.
@@ -31,7 +31,18 @@ Spring MVC application
       MySQL
 ```
 
-There is one deployable Spring Boot application. Docker Compose provides only local MySQL. Tests use a real MySQL container through Testcontainers. Application packages beyond the root package are intentionally deferred until Stage 1 behavior establishes useful boundaries.
+There is one deployable Spring Boot application. Docker Compose provides only local MySQL. Tests use a real MySQL container through Testcontainers. Stage 1 query code is grouped in the `history` package; no future-stage packages or deployable components are scaffolded.
+
+The Stage 1 Source model uses four normalized tables:
+
+```text
+shops
+  └─ games
+       └─ rounds
+            └─ round_scores
+```
+
+`OriginalGameHistoryQuery` joins these tables and aggregates one result per game. It includes games without rounds or scores, uses a half-open `[from, to)` time range, and applies `playedAt DESC, gameId DESC` before limit/offset pagination.
 
 ## Technology decisions
 
@@ -42,7 +53,10 @@ There is one deployable Spring Boot application. Docker Compose provides only lo
 - MySQL 8.4 is pinned to its LTS release line in Compose and Testcontainers so local and test database behavior match.
 - Local MySQL uses host port 3307 by default because port 3306 is already occupied in the development environment. `MYSQL_PORT` can override the host port; the container port remains 3306.
 - Testcontainers verifies actual MySQL connectivity. H2 or another in-memory database is not used.
-- Database migration tooling is deferred until Stage 1 introduces the first schema.
+- Stage 1 initializes its first schema with Spring Boot `schema.sql`; migration tooling remains deferred and no migration dependency is introduced in this slice.
+- `playerNickname`, `courseName`, and `gameStatus` are properties of a game. No Player/User entity is introduced because the comparison does not need one.
+- `playedAt` is stored as a microsecond-precision MySQL `DATETIME` containing UTC wall-clock time and is exposed by the query as an `Instant`.
+- `totalScore` is the sum of all RoundScore rows for a game. `roundCount` counts distinct Round rows, including a round that currently has no score rows.
 
 ## Constraints
 
@@ -70,9 +84,8 @@ For local development:
 
 ## Open questions for Stage 1
 
-- Exact normalized table columns, keys, and indexes within the fixed Shop → Game → Round → RoundScore domain.
-- Date-range boundary and pagination semantics for the representative API.
 - Reproducible seed-generation approach and exact initial row distribution near one million records.
 - Load-generation tool and the format/location for baseline evidence.
+- Whether the initial Source indexes need adjustment after recording the first MySQL execution plan.
 
 Resolve these only as part of Stage 1, before implementing the affected behavior.
