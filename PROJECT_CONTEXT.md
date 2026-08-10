@@ -12,11 +12,11 @@ The primary audience is a Java/Spring developer learning Kotlin while examining 
 
 ## Current phase
 
-Stage 1 is in progress. The normalized Source schema, Original JOIN query, and representative HTTP API are implemented and verified with a small MySQL fixture. Large reproducible seed data, execution-plan capture, and the performance baseline are not implemented yet.
+Stage 1 is in progress. The normalized Source schema, Original JOIN query, representative HTTP API, and deterministic large-data generator are implemented. Query correctness and the generator are verified with small MySQL data sets. The full performance data load, execution-plan capture, and performance baseline have not been run yet.
 
 The remaining Stage 1 work must establish:
 
-- reproducible data beginning around one million records;
+- generate the full default data set in the measurement environment;
 - baseline p95 latency, throughput, SQL execution plan, rows read, and resource usage;
 - evidence of the JOIN bottleneck, or evidence supporting a larger data set.
 
@@ -59,6 +59,31 @@ shops
 - `GET /shops/{shopId}/games` requires ISO-8601 instant values for `from` and `to`. `page` is zero-based and defaults to 0; `size` defaults to 20 and must be between 1 and 100.
 - The API returns a JSON array of game-history rows. A total count and a pagination wrapper are omitted because the current comparison only requires the fixed result fields and query pagination.
 
+## Stage 1 performance data
+
+The generator uses MySQL set-based `INSERT ... SELECT` statements. Two bounded 0–999 sequences are combined to produce up to one million row numbers; recursion remains within MySQL's default depth instead of recursing once per game. No stored procedure or application-level row-by-row insert is used. The default deterministic seed is `20260810`.
+
+Default scale and distribution:
+
+- 100 shops and exactly 1,000,000 games.
+- Shop 1 is the popular shop with exactly 100,000 games. The other 900,000 games are distributed nearly evenly across shops 2–100; shop 2 is the representative typical shop with about 9,091 games.
+- Games are deterministically spread over `[2025-01-01T00:00:00Z, 2026-01-01T00:00:00Z)`.
+- 5% of games are `CANCELLED` with no rounds, 10% are `IN_PROGRESS` with two rounds and one score row, and 85% are `COMPLETED` with four rounds and two score rows per round.
+- The default data set therefore contains exactly 3,600,000 rounds and 6,900,000 round scores. This provides child-row multiplication for the Original JOIN while retaining incomplete and cancelled games.
+- IDs, shop assignment, timestamps, strings, statuses, and scores are calculated from the row number and seed without `RAND()`. Resetting and rerunning with the same values produces the same logical rows.
+
+Generation replaces all Source rows and is intentionally separate from normal verification:
+
+1. Run `./scripts/generate-stage1-data.sh --reset`.
+2. The command starts local MySQL, creates the Source schema if needed, generates the default data, and runs completion checks.
+3. Run `./scripts/check-stage1-data.sh` at any time to recheck table counts, expected child counts, orphan rows, shop skew, and date bounds.
+
+`SEED_GAME_COUNT` can select a smaller size from 1 to 1,000,000 and `SEED_VALUE` can replace the default seed. Existing data is not replaced unless `--reset` is explicit. Because `TRUNCATE` and the bulk insert statements are not one atomic transaction, retry a failed load with `--reset`.
+
+Normal `./scripts/verify.sh` runs the same SQL with only 200 games and never loads the default million-game data set. At that test size the deterministic result is 100 shops, 200 games, 720 rounds, and 1,380 round scores; the test also reseeds and compares every logical Source row. The CLI generation and completion-check path was separately exercised at this small size against an isolated local database.
+
+Future benchmark queries should use shop 1 as the popular shop and shop 2 as a typical shop. With the fixed upper bound `to=2026-01-01T00:00:00Z`, use `from=2025-12-25T00:00:00Z` for seven days and `from=2025-10-01T00:00:00Z` for roughly three months. A later page such as `page=100&size=20` is available for the popular-shop three-month case. These are workload coordinates, not measured performance results.
+
 ## Constraints
 
 - Kotlin code should remain readable to someone coming from Java and Spring. Avoid unnecessary DSLs, extension-heavy design, operator overloading, delegated properties, and advanced functional patterns.
@@ -85,7 +110,6 @@ For local development:
 
 ## Open questions for Stage 1
 
-- Reproducible seed-generation approach and exact initial row distribution near one million records.
 - Load-generation tool and the format/location for baseline evidence.
 - Whether the initial Source indexes need adjustment after recording the first MySQL execution plan.
 
