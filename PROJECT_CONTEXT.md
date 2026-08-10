@@ -12,11 +12,10 @@ The primary audience is a Java/Spring developer learning Kotlin while examining 
 
 ## Current phase
 
-Stage 1 is in progress. The normalized Source schema and the Original JOIN query are implemented and verified with a small MySQL fixture. The representative HTTP API, large reproducible seed data, execution-plan capture, and performance baseline are not implemented yet.
+Stage 1 is in progress. The normalized Source schema, Original JOIN query, and representative HTTP API are implemented and verified with a small MySQL fixture. Large reproducible seed data, execution-plan capture, and the performance baseline are not implemented yet.
 
 The remaining Stage 1 work must establish:
 
-- the representative API using the existing Original JOIN query;
 - reproducible data beginning around one million records;
 - baseline p95 latency, throughput, SQL execution plan, rows read, and resource usage;
 - evidence of the JOIN bottleneck, or evidence supporting a larger data set.
@@ -42,7 +41,7 @@ shops
             └─ round_scores
 ```
 
-`OriginalGameHistoryQuery` joins these tables and aggregates one result per game. It includes games without rounds or scores, uses a half-open `[from, to)` time range, and applies `playedAt DESC, gameId DESC` before limit/offset pagination.
+`GameHistoryController` exposes the representative API and calls `OriginalGameHistoryQuery` directly. The query joins these tables and aggregates one result per game. It includes games without rounds or scores, uses a half-open `[from, to)` time range, and applies `playedAt DESC, gameId DESC` before limit/offset pagination.
 
 ## Technology decisions
 
@@ -57,6 +56,8 @@ shops
 - `playerNickname`, `courseName`, and `gameStatus` are properties of a game. No Player/User entity is introduced because the comparison does not need one.
 - `playedAt` is stored as a microsecond-precision MySQL `DATETIME` containing UTC wall-clock time and is exposed by the query as an `Instant`.
 - `totalScore` is the sum of all RoundScore rows for a game. `roundCount` counts distinct Round rows, including a round that currently has no score rows.
+- `GET /shops/{shopId}/games` requires ISO-8601 instant values for `from` and `to`. `page` is zero-based and defaults to 0; `size` defaults to 20 and must be between 1 and 100.
+- The API returns a JSON array of game-history rows. A total count and a pagination wrapper are omitted because the current comparison only requires the fixed result fields and query pagination.
 
 ## Constraints
 
