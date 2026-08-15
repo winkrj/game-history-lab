@@ -1,0 +1,21 @@
+command=./scripts/rebuild-stage2-read-model.sh
+ Container game-history-lab-mysql-1  Running
+ Container game-history-lab-mysql-1  Waiting
+ Container game-history-lab-mysql-1  Healthy
+Rebuilding Stage 2 Read Model from 1000000 Source games.
++-----------------+---------------+
+| read_model_rows | build_seconds |
++-----------------+---------------+
+|         1000000 |      385.5919 |
++-----------------+---------------+
++---------------------+---------+
+| metric              | value   |
++---------------------+---------+
+| source_games        | 1000000 |
+| read_model_rows     | 1000000 |
+| popular_shop_1_rows |  100000 |
++---------------------+---------+
+Stage 2 Read Model verification passed: all 1000000 rows and three representative pages match the Source projection.
+real 722.67
+user 1.49
+sys 1.04

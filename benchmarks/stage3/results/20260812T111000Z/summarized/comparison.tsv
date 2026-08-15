@@ -1,0 +1,9 @@
+item	simple_rebuild	spring_batch
+full_processing_time	385.5919 SQL seconds; 722.67 process seconds including checks	312.2380 JobExecution seconds; 330.87 process seconds; checks separate
+execution_state	process output only	JDBC JobRepository Job/Step status and timestamps
+failure_position	unknown	gameId 250001; read 251000; write 250000; commit 250; rollback 1
+restart_range	full rebuild	remaining 750000 rows in same JobInstance
+partial_backfill	unsupported command; one-off SQL required	IDs 400001..410000; 10000 writes; outside checksum unchanged
+duplicates_or_missing	not complete after failure	zero after restart and exhaustive checker
+operating_procedure	run full script again after failure	rerun same identifying parameters with failure disabled
+implementation_complexity	one SQL file and wrapper	Batch dependency; JDBC metadata; job/step/reader/writer; parameters

@@ -8,3 +8,11 @@ spring:
   sql:
     init:
       mode: always
+      schema-locations: classpath:schema.sql,classpath:batch-schema.sql
+  batch:
+    job:
+      enabled: false
+
+stage3:
+  batch:
+    chunk-size: 1000

@@ -1,0 +1,5 @@
+method	result	read_model_rows	correctness
+simple_intentional_failure	exit_1	0	not_complete
+batch_intentional_failure	exit_1	250000	committed_prefix
+batch_restart	completed	1000000	all_rows_match
+batch_partial_backfill	completed	1000000	all_rows_match_outside_unchanged
