@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.batch.core.BatchStatus
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.parameters.JobParametersBuilder
-import org.springframework.batch.core.launch.JobLauncher
+import org.springframework.batch.core.launch.JobOperator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
@@ -29,7 +29,7 @@ class GameHistoryReadModelBatchIntegrationTests {
     private lateinit var dataSource: DataSource
 
     @Autowired
-    private lateinit var jobLauncher: JobLauncher
+    private lateinit var jobOperator: JobOperator
 
     @Autowired
     private lateinit var gameHistoryReadModelJob: Job
@@ -59,7 +59,7 @@ class GameHistoryReadModelBatchIntegrationTests {
     fun buildsTheProjectionInCommittedChunks() {
         jdbcTemplate.update("TRUNCATE TABLE game_history_read_model")
 
-        val execution = jobLauncher.run(
+        val execution = jobOperator.start(
             gameHistoryReadModelJob,
             parameters(runId = UUID.randomUUID().toString(), mode = "full"),
         )
@@ -68,7 +68,7 @@ class GameHistoryReadModelBatchIntegrationTests {
         val step = execution.stepExecutions.single()
         assertEquals(200, step.readCount)
         assertEquals(200, step.writeCount)
-        assertEquals(21, step.commitCount)
+        assertEquals(20, step.commitCount)
         assertProjectionMatchesSource()
     }
 
@@ -77,7 +77,7 @@ class GameHistoryReadModelBatchIntegrationTests {
         jdbcTemplate.update("TRUNCATE TABLE game_history_read_model")
         val runId = UUID.randomUUID().toString()
 
-        val failed = jobLauncher.run(
+        val failed = jobOperator.start(
             gameHistoryReadModelJob,
             parameters(runId = runId, mode = "full", failAfterGameId = 55),
         )
@@ -89,7 +89,7 @@ class GameHistoryReadModelBatchIntegrationTests {
         assertEquals(5, failedStep.commitCount)
         assertEquals(1, failedStep.rollbackCount)
 
-        val restarted = jobLauncher.run(
+        val restarted = jobOperator.start(
             gameHistoryReadModelJob,
             parameters(runId = runId, mode = "full"),
         )
@@ -118,7 +118,7 @@ class GameHistoryReadModelBatchIntegrationTests {
             """.trimIndent(),
         )
 
-        val execution = jobLauncher.run(
+        val execution = jobOperator.start(
             gameHistoryReadModelJob,
             parameters(
                 runId = UUID.randomUUID().toString(),

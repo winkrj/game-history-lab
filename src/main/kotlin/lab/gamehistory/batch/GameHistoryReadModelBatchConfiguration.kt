@@ -41,7 +41,8 @@ class GameHistoryReadModelBatchConfiguration {
         readModelWriter: ItemWriter<Long>,
         @Value("\${stage3.batch.chunk-size:1000}") chunkSize: Int,
     ): Step = StepBuilder("buildReadModelStep", jobRepository)
-        .chunk<Long, Long>(chunkSize, transactionManager)
+        .chunk<Long, Long>(chunkSize)
+        .transactionManager(transactionManager)
         .reader(readModelSourceReader)
         .processor(failureInjectingProcessor)
         .writer(readModelWriter)

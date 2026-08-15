@@ -3,7 +3,7 @@ package lab.gamehistory.batch
 import org.springframework.batch.core.BatchStatus
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.parameters.JobParametersBuilder
-import org.springframework.batch.core.launch.JobLauncher
+import org.springframework.batch.core.launch.JobOperator
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.ApplicationArguments
@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 @Component
 @ConditionalOnProperty(name = ["stage4.incremental.command.enabled"], havingValue = "true")
 class Stage4IncrementalCommand(
-    private val jobLauncher: JobLauncher,
+    private val jobOperator: JobOperator,
     @Qualifier("incrementalGameHistoryReadModelJob")
     private val incrementalJob: Job,
     private val jdbcTemplate: JdbcTemplate,
@@ -67,7 +67,7 @@ class Stage4IncrementalCommand(
             .toJobParameters()
 
         val startedAt = System.nanoTime()
-        val execution = jobLauncher.run(incrementalJob, parameters)
+        val execution = jobOperator.start(incrementalJob, parameters)
         val durationMillis = Duration.ofNanos(System.nanoTime() - startedAt).toMillis()
 
         execution.stepExecutions.sortedBy { it.id }.forEach { step ->

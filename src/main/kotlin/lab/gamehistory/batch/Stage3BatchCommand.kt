@@ -3,7 +3,7 @@ package lab.gamehistory.batch
 import org.springframework.batch.core.BatchStatus
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.parameters.JobParametersBuilder
-import org.springframework.batch.core.launch.JobLauncher
+import org.springframework.batch.core.launch.JobOperator
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 @Component
 @ConditionalOnProperty(name = ["stage3.batch.command.enabled"], havingValue = "true")
 class Stage3BatchCommand(
-    private val jobLauncher: JobLauncher,
+    private val jobOperator: JobOperator,
     private val gameHistoryReadModelJob: Job,
     @Value("\${stage3.batch.mode:full}") private val mode: String,
     @Value("\${stage3.batch.run-id:manual}") private val runId: String,
@@ -36,7 +36,7 @@ class Stage3BatchCommand(
             .addLong("failAfterGameId", failAfterGameId, false)
             .toJobParameters()
 
-        val execution = jobLauncher.run(gameHistoryReadModelJob, parameters)
+        val execution = jobOperator.start(gameHistoryReadModelJob, parameters)
         execution.stepExecutions.forEach { step ->
             println(
                 "STAGE3_STEP name=${step.stepName} status=${step.status} " +

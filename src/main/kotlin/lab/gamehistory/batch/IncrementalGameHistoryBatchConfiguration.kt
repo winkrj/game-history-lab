@@ -45,7 +45,8 @@ class IncrementalGameHistoryBatchConfiguration {
         incrementalReadModelWriter: ItemWriter<IncrementalSourceChange>,
         @Value("\${stage4.incremental.chunk-size:100}") chunkSize: Int,
     ): Step = StepBuilder("processIncrementalChangesStep", jobRepository)
-        .chunk<IncrementalSourceChange, IncrementalSourceChange>(chunkSize, transactionManager)
+        .chunk<IncrementalSourceChange, IncrementalSourceChange>(chunkSize)
+        .transactionManager(transactionManager)
         .reader(incrementalSourceChangeReader)
         .processor(incrementalFailureProcessor)
         .writer(incrementalReadModelWriter)

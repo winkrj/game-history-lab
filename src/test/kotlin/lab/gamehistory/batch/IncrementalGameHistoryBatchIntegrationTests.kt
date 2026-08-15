@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.batch.core.BatchStatus
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.parameters.JobParametersBuilder
-import org.springframework.batch.core.launch.JobLauncher
+import org.springframework.batch.core.launch.JobOperator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
@@ -28,7 +28,7 @@ class IncrementalGameHistoryBatchIntegrationTests {
     private lateinit var dataSource: DataSource
 
     @Autowired
-    private lateinit var jobLauncher: JobLauncher
+    private lateinit var jobOperator: JobOperator
 
     @Autowired
     @Qualifier("incrementalGameHistoryReadModelJob")
@@ -124,7 +124,7 @@ class IncrementalGameHistoryBatchIntegrationTests {
     }
 
     private fun launch(runId: String, upper: LocalDateTime, failAfterCount: Long = 0) =
-        jobLauncher.run(
+        jobOperator.start(
             incrementalJob,
             JobParametersBuilder()
                 .addString("runId", runId)
