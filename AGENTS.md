@@ -15,6 +15,8 @@
 - Check generated Stage 1 data: `./scripts/check-stage1-data.sh`
 - Run a Stage 3 batch range: `./scripts/run-stage3-batch.sh RUN_ID [full|backfill] [MIN_ID] [MAX_ID] [FAIL_ID]`
 - Check Stage 3 metadata and correctness: `./scripts/check-stage3-batch.sh`
+- Run a Stage 4 incremental range: `./scripts/run-stage4-incremental.sh RUN_ID [UPPER_UPDATED_AT] [FAIL_AFTER_COUNT]`
+- Run the Stage 4 freshness experiment: `./scripts/run-stage4-experiment.sh UNIQUE_RESULT_ID`
 - Prepare local CDC services: `./scripts/prepare-stage5-cdc.sh`
 - Run the Stage 5 CDC experiment: `./scripts/run-stage5-experiment.sh UNIQUE_RESULT_ID`
 - Stop local MySQL: `docker compose down`
@@ -24,6 +26,7 @@
 - Keep one Spring Boot application until an observed problem requires another deployable component.
 - Stage 3 retains the Stage 2 plain-SQL baseline and adds one JDBC-backed Spring Batch job for bulk/restart/backfill experiments.
 - The Batch path uses a `game_id` range, 1,000-row chunks, durable execution metadata, and idempotent range UPSERTs.
+- Stage 4 uses an explicit incremental Batch command to compare periodic freshness with a durable `(updated_at, game_id)` cursor, bounded overlap, and idempotent projection UPSERTs.
 - Stage 5 uses Debezium and Kafka only for continuous insert/update propagation. Batch remains the initial-load, rebuild, backfill, and bulk-recovery path.
 - The representative API defaults to the Read Model; `queryMode=original` remains an explicit experiment comparison path.
 - Preserve the representative game-history API and result meaning from `PROJECT_DESIGN.md` across later stages.

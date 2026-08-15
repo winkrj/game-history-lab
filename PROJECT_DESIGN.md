@@ -9,15 +9,16 @@
 ```text
 대량 JOIN 조회가 느리다
 → Read Model로 조회 비용을 줄인다
-→ 일별 갱신과 과거/당일 분리 조회가 복잡해진다
+→ Read Model 생성·실패 복구·부분 재처리 문제가 생긴다
 → Spring Batch로 대량 처리와 재처리를 관리한다
-→ CDC와 Kafka로 변경분을 계속 반영한다
+→ Incremental Batch로 수분 단위 변경 반영의 충분성과 비용을 확인한다
+→ seconds-level 요구가 확인된 뒤 CDC와 Kafka로 변경분을 지속 반영한다
 → 하나의 Read Model에서 전체 게임 이력을 조회한다
 ```
 
 ## 2. 핵심 질문
 
-> 대량 게임 이력 조회를 위해 Read Model을 분리했을 때 발생하는 일별 갱신, 과거·당일 분리 조회, 실패 복구와 재처리 문제를 Spring Batch와 CDC로 어떻게 단순화할 수 있는가?
+> 대량 게임 이력 조회를 위해 Read Model을 분리했을 때 발생하는 bulk 생성·실패 복구·재처리·freshness 문제를 Spring Batch, Incremental Batch, CDC로 어떻게 나누어 해결할 수 있는가?
 
 ## 3. 기본 도메인
 
@@ -90,15 +91,16 @@ JOIN + Aggregate
 - JOIN 조회의 기준 성능과 실행 계획을 기록했다.
 - 병목이 실제로 확인되었거나, 데이터 규모를 더 늘려야 한다는 판단 근거가 있다.
 
-### 단계 2 — 과거 Read Model + 당일 원본 조회
+### 단계 2 — game당 1 row Read Model
 
-실무에서 사용했던 방식과 유사한 구조를 만든다.
+Original JOIN과 동일한 API 의미를 game당 1 row projection으로 미리 계산한다.
 
 ```text
-과거 데이터 → Read Model
-당일 데이터 → 원본 테이블 조회
-              ↓
-          API에서 Merge
+Source tables
+  ↓ JOIN + Aggregate at build time
+Read Model
+  ↓ ordered projection lookup
+Query API
 ```
 
 과거 Read Model 생성은 처음부터 Spring Batch를 사용하지 않는다. plain SQL 또는 단순 application job으로 먼저 동작하게 만들고, 다음 운영 문제를 실제로 확인한다.
@@ -113,14 +115,13 @@ JOIN + Aggregate
 
 먼저 조회 성능이 개선되는지 확인한다. 그다음 이 구조에서 발생하는 불편을 관찰한다.
 
-예상되는 문제:
+관찰할 문제:
 
-- 과거 데이터를 매일 가공해야 한다.
+- Source 변경 후 Read Model을 언제 다시 생성할지 결정해야 한다.
 - 작업이 중간에 실패했을 때 처리 위치를 알기 어렵다.
 - 전체 재실행과 일부 재처리의 기준이 불명확하다.
-- 과거와 당일을 따로 조회하고 정렬·pagination 결과를 합쳐야 한다.
-- 날짜 경계에서 누락이나 중복 가능성이 생긴다.
-- 수정되거나 취소된 과거 이력의 반영 시점이 애매하다.
+- Source의 신규·수정·취소 변경을 언제 반영할지 결정해야 한다.
+- destructive full rebuild 중에 API가 어떤 상태를 보게 되는지 불명확하다.
 
 모든 문제를 억지로 구현하지 않는다. 실제 구현에서 확인된 문제만 결과로 기록한다.
 
@@ -128,8 +129,8 @@ JOIN + Aggregate
 
 - Original JOIN과 동일한 결과를 반환한다.
 - 조회 성능 차이를 확인했다.
-- 과거/당일 merge가 만드는 코드 및 운영 복잡성을 설명할 수 있다.
-- Spring Batch와 CDC가 해결해야 할 구체적인 문제가 확인되었다.
+- simple rebuild의 실패 복구·재처리·부분 backfill 문제를 설명할 수 있다.
+- Read Model을 도입한 뒤 새로 생긴 freshness 문제를 설명할 수 있다.
 
 ### 단계 3 — Spring Batch로 대량 처리와 재처리 관리
 
@@ -167,18 +168,40 @@ Scheduler와 Spring Batch를 세부 항목별로 장기간 비교하지 않는�
 - 재시작 후 Source와 Read Model이 일치한다.
 - Spring Batch를 사용하는 이유를 성능이 아닌 운영·복구 관점에서 설명할 수 있다.
 
-### 단계 4 — CDC와 Kafka로 변경분 반영
+### 단계 4 — Incremental Batch로 freshness 경계 확인
 
-CDC와 Kafka는 이미 정해진 기술을 사용하기 위해 도입하지 않는다. 단계 2~3에서 다음 중 하나 이상의 문제가 실제로 확인됐을 때 단계 4로 진행한다.
+단계 3의 bulk job이 완료된 뒤에도 Source는 계속 변경하므로 Read Model은 다시 stale해진다. CDC를 바로 도입하지 않고, 변경된 game만 주기적으로 재계산하는 Incremental Batch가 수분 단위 freshness에 충분한지 먼저 확인한다.
 
-- periodic update에 의한 freshness gap
-- 과거/당일 분리 조회와 API merge 복잡성
-- 수정되거나 취소된 과거 데이터의 반영 어려움
-- Batch 주기를 계속 줄였을 때의 처리 비용 또는 운영 복잡성
+변경 범위는 `games`, `rounds`, `round_scores`의 `(updated_at, game_id)` 순서로 식별한다. 경계 누락을 줄이기 위해 overlap을 허용하고, 영향받은 game의 최신 Source projection 전체를 다시 계산해 UPSERT한다. durable cursor는 변경 처리가 성공한 뒤에만 전진한다.
+
+Scheduler framework 비교는 이 단계의 목적이 아니다. 재현 가능한 명시적 command로 60분, 10분, 5분, 1분 cadence의 freshness와 polling 비용을 비교한다.
+
+확인할 항목:
+
+- 신규 game, 상태 변경, round·score 변경이 전체 rebuild 없이 반영되는가.
+- 동일 timestamp 경계와 overlap replay에서 누락·중복 없이 수렴하는가.
+- 중간 실패 후 restart했을 때 durable cursor와 Read Model이 정확한가.
+- cadence를 줄일수록 freshness, empty run, Source query 비용이 어떻게 변하는가.
+
+완료 조건:
+
+- 변경분만 처리하는 incremental path가 동작한다.
+- cursor boundary, replay, failure/restart 후 Source와 Read Model이 일치한다.
+- 5분·10분·1분 등 freshness 요구에 따른 polling 비용을 설명할 수 있다.
+- 실제 측정 결과가 CDC 검토 여부의 근거가 된다.
+
+### 단계 5 — CDC와 Kafka로 변경분 반영
+
+CDC와 Kafka는 이미 정해진 기술을 사용하기 위해 도입하지 않는다. 단계 4에서 다음 중 하나 이상의 문제가 실제로 확인됐을 때 단계 5로 진행한다.
+
+- 요구 freshness를 맞추려면 polling 주기가 지나치게 짧아진다.
+- empty batch와 Source query·connection 비용이 눈에 띄게 증가한다.
+- overlapping execution이나 scheduler 운영이 복잡해진다.
+- strict 1분 이하 또는 seconds-level freshness를 polling으로 안정적으로 맞추기 어렵다.
 
 Spring Batch는 bulk, rebuild, recovery 책임을 유지한다. CDC와 Kafka는 지속적인 change propagation이 실제로 필요해졌을 때 도입한다.
 
-단계 4에 진입하면 Source DB 변경을 CDC로 감지하고 Kafka를 통해 Read Model Consumer에 전달하는 구조를 목표로 한다.
+단계 5에 진입하면 Source DB 변경을 CDC로 감지하고 Kafka를 통해 Read Model Consumer에 전달하는 구조를 목표로 한다.
 
 ```text
 Source MySQL
@@ -272,15 +295,16 @@ Kafka는 기술 사용 자체를 보여주기 위해 추가하지 않는다. CDC
 ```text
 1. 원본 JOIN 조회의 병목을 재현했다.
 2. Read Model로 조회 성능을 개선했다.
-3. 과거/당일 분리와 일별 갱신의 운영 문제를 확인했다.
+3. Read Model bulk 생성과 실패 복구·재처리 문제를 확인했다.
 4. Spring Batch로 최초 적재와 재처리를 관리했다.
-5. CDC와 Kafka로 변경분을 반영했다.
-6. 하나의 Read Model에서 전체 이력을 조회했다.
-7. 조회 성능, restart, 변경 반영, 최종 정합성을 검증했다.
+5. Incremental Batch로 수분 단위 freshness의 충분성과 polling 비용을 확인했다.
+6. seconds-level 요구에서 CDC와 Kafka로 변경분을 반영했다.
+7. 하나의 Read Model에서 전체 이력을 조회했다.
+8. 조회 성능, restart, 변경 반영, 최종 정합성을 검증했다.
 ```
 
 최종 결론은 “Spring Batch, CDC, Kafka를 사용했다”가 아니다.
 
-> Read Model로 조회 비용을 줄인 뒤 새로 발생한 일별 갱신, 분리 조회, 실패 복구 문제를 확인했고, Spring Batch에는 대량 처리와 재처리를, CDC와 Kafka에는 지속적인 변경 반영을 맡겨 조회 경로와 운영 책임을 단순화했다.
+> Read Model로 조회 비용을 줄인 뒤 새로 발생한 bulk 생성·실패 복구·freshness 문제를 확인했고, Spring Batch에는 대량 처리와 재처리를, Incremental Batch에는 수분 단위 변경 반영을, CDC와 Kafka에는 seconds-level 지속 변경 반영을 맡겼다.
 
 이 문장을 실제 코드와 측정 결과로 뒷받침하는 것이 프로젝트의 최종 목표다.
