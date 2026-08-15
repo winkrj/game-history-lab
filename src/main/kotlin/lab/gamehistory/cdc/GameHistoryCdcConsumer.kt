@@ -3,7 +3,6 @@ package lab.gamehistory.cdc
 import lab.gamehistory.projection.GameHistoryProjectionUpdater
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
@@ -11,17 +10,15 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.Instant
-import java.util.concurrent.atomic.AtomicBoolean
 
 @Component
 @ConditionalOnProperty(name = ["stage5.cdc.enabled"], havingValue = "true")
 class GameHistoryCdcConsumer(
+    private val recordParser: DebeziumRecordParser,
     private val affectedGameResolver: CdcAffectedGameResolver,
     private val projectionUpdater: GameHistoryProjectionUpdater,
-    @Value("\${stage5.cdc.fail-on-game-id:0}") private val failOnGameId: Long,
+    private val failureInjector: CdcFailureInjector,
 ) {
-
-    private val failureInjected = AtomicBoolean(false)
 
     @KafkaListener(
         topics = [
@@ -33,13 +30,12 @@ class GameHistoryCdcConsumer(
     )
     @Transactional("transactionManager")
     fun consume(record: ConsumerRecord<String, String>) {
-        val affectedGame = affectedGameResolver.resolve(record.value()) ?: return
+        val parsedRecord = recordParser.parse(record.value()) ?: return
+        val affectedGame = affectedGameResolver.resolve(parsedRecord)
         val receivedAtMillis = Instant.now().toEpochMilli()
 
         projectionUpdater.upsertGames(listOf(affectedGame.gameId))
-        if (affectedGame.gameId == failOnGameId && failureInjected.compareAndSet(false, true)) {
-            throw IllegalStateException("Deterministic CDC failure for gameId=${affectedGame.gameId}")
-        }
+        failureInjector.afterProjectionUpdate(affectedGame.gameId)
 
         TransactionSynchronizationManager.registerSynchronization(
             object : TransactionSynchronization {

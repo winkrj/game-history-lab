@@ -27,6 +27,9 @@ class CdcProjectionIntegrationTests {
     private lateinit var affectedGameResolver: CdcAffectedGameResolver
 
     @Autowired
+    private lateinit var recordParser: DebeziumRecordParser
+
+    @Autowired
     private lateinit var projectionUpdater: GameHistoryProjectionUpdater
 
     @BeforeEach
@@ -40,19 +43,19 @@ class CdcProjectionIntegrationTests {
     @Test
     fun resolvesAffectedGameFromEachCapturedTableAndReusesOneProjectionUpdater() {
         jdbcTemplate.update("UPDATE games SET game_status = 'CANCELLED' WHERE id = 100")
-        val gameChange = affectedGameResolver.resolve(event("games", "u", "\"id\":100"))!!
+        val gameChange = resolve(event("games", "u", "\"id\":100"))
         assertEquals(100L, gameChange.gameId)
         projectionUpdater.upsertGames(listOf(gameChange.gameId))
         assertEquals("CANCELLED", value("SELECT game_status FROM game_history_read_model WHERE game_id = 100"))
 
         jdbcTemplate.update("INSERT INTO rounds (id, game_id, round_number) VALUES (1003, 100, 3)")
-        val roundChange = affectedGameResolver.resolve(event("rounds", "c", "\"id\":1003,\"game_id\":100"))!!
+        val roundChange = resolve(event("rounds", "c", "\"id\":1003,\"game_id\":100"))
         assertEquals(100L, roundChange.gameId)
         projectionUpdater.upsertGames(listOf(roundChange.gameId))
         assertEquals(3L, longValue("SELECT round_count FROM game_history_read_model WHERE game_id = 100"))
 
         jdbcTemplate.update("UPDATE round_scores SET score = 111 WHERE id = 5004")
-        val scoreChange = affectedGameResolver.resolve(event("round_scores", "u", "\"id\":5004,\"round_id\":2001"))!!
+        val scoreChange = resolve(event("round_scores", "u", "\"id\":5004,\"round_id\":2001"))
         assertEquals(200L, scoreChange.gameId)
         projectionUpdater.upsertGames(listOf(scoreChange.gameId))
         assertEquals(111L, longValue("SELECT total_score FROM game_history_read_model WHERE game_id = 200"))
@@ -61,7 +64,7 @@ class CdcProjectionIntegrationTests {
     @Test
     fun replayingTheSameAffectedGameKeepsTheProjectionStable() {
         jdbcTemplate.update("UPDATE round_scores SET score = 55 WHERE id = 5001")
-        val change = affectedGameResolver.resolve(event("round_scores", "u", "\"id\":5001,\"round_id\":1001"))!!
+        val change = resolve(event("round_scores", "u", "\"id\":5001,\"round_id\":1001"))
 
         projectionUpdater.upsertGames(listOf(change.gameId))
         val first = fingerprint(change.gameId)
@@ -79,6 +82,8 @@ class CdcProjectionIntegrationTests {
           "op": "$operation"
         }
     """.trimIndent()
+
+    private fun resolve(value: String): CdcAffectedGame = affectedGameResolver.resolve(recordParser.parse(value)!!)
 
     private fun value(sql: String): String = jdbcTemplate.queryForObject(sql, String::class.java)!!
 
