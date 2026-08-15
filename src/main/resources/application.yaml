@@ -16,3 +16,7 @@ spring:
 stage3:
   batch:
     chunk-size: 1000
+
+stage4:
+  incremental:
+    chunk-size: 100

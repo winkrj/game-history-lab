@@ -5,6 +5,8 @@ SET @game_count = COALESCE(@game_count, 1000000);
 SET @seed = COALESCE(@seed, 20260810);
 
 SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE game_history_read_model;
+TRUNCATE TABLE incremental_read_model_checkpoint;
 TRUNCATE TABLE round_scores;
 TRUNCATE TABLE rounds;
 TRUNCATE TABLE games;
@@ -52,7 +54,8 @@ INSERT INTO games (
     played_at,
     player_nickname,
     course_name,
-    game_status
+    game_status,
+    updated_at
 )
 SELECT
     game_number.number_value + 1,
@@ -70,15 +73,20 @@ SELECT
         WHEN MOD(FLOOR(game_number.number_value / 10) + @seed, 20) = 0 THEN 'CANCELLED'
         WHEN MOD(FLOOR(game_number.number_value / 10) + @seed, 20) IN (1, 2) THEN 'IN_PROGRESS'
         ELSE 'COMPLETED'
-    END
+    END,
+    DATE_ADD(
+        '2025-01-01 00:00:00',
+        INTERVAL MOD(game_number.number_value * 104729 + @seed, 31536000) SECOND
+    )
 FROM seed_numbers game_number
 WHERE game_number.number_value < @game_count;
 
-INSERT INTO rounds (id, game_id, round_number)
+INSERT INTO rounds (id, game_id, round_number, updated_at)
 SELECT
     (game.id - 1) * 4 + round_sequence.round_number,
     game.id,
-    round_sequence.round_number
+    round_sequence.round_number,
+    game.updated_at
 FROM games game
 JOIN (
     SELECT 1 AS round_number
@@ -92,11 +100,12 @@ JOIN (
         ELSE 0
     END;
 
-INSERT INTO round_scores (id, round_id, score)
+INSERT INTO round_scores (id, round_id, score, updated_at)
 SELECT
     (round_row.id - 1) * 2 + score_sequence.score_position,
     round_row.id,
-    MOD(round_row.id * 31 + score_sequence.score_position * 7 + @seed, 11) - 5
+    MOD(round_row.id * 31 + score_sequence.score_position * 7 + @seed, 11) - 5,
+    game.updated_at
 FROM rounds round_row
 JOIN games game ON game.id = round_row.game_id
 JOIN (
@@ -111,3 +120,10 @@ JOIN (
         );
 
 DROP TEMPORARY TABLE seed_numbers;
+
+INSERT INTO incremental_read_model_checkpoint (
+    checkpoint_name,
+    cursor_updated_at,
+    cursor_game_id
+)
+VALUES ('game-history', '1970-01-01 00:00:00.000000', 0);

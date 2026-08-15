@@ -65,6 +65,7 @@ mysql_client=(
 )
 
 "${mysql_client[@]}" < src/main/resources/schema.sql
+./scripts/prepare-stage4-schema.sh >/dev/null
 
 existing_source_rows="$(
     "${mysql_client[@]}" --batch --skip-column-names --execute "

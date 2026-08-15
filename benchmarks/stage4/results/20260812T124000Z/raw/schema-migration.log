@@ -1,0 +1,10 @@
+ Container game-history-lab-mysql-1  Running
+ Container game-history-lab-mysql-1  Waiting
+ Container game-history-lab-mysql-1  Healthy
++--------------+-----------------------------+---------------------+
+| TABLE_NAME   | INDEX_NAME                  | columns_in_order    |
++--------------+-----------------------------+---------------------+
+| games        | idx_games_updated_at        | updated_at,id       |
+| round_scores | idx_round_scores_updated_at | updated_at,round_id |
+| rounds       | idx_rounds_updated_at       | updated_at,game_id  |
++--------------+-----------------------------+---------------------+

@@ -1,0 +1,33 @@
+tick_seconds=3600
+apply_command=SET @elapsed_seconds=3600; scripts/sql/apply-stage4-workload.sql
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.0)
+
+2026-08-12T21:38:37.255+09:00  INFO 24217 --- [game-history-lab] [           main] l.g.GameHistoryLabApplicationKt          : Starting GameHistoryLabApplicationKt v0.0.1-SNAPSHOT using Java 21.0.5 with PID 24217 (/Users/hongseungjun/이직/project/game-history-lab/build/libs/game-history-lab-0.0.1-SNAPSHOT.jar started by hongseungjun in /Users/hongseungjun/이직/project/game-history-lab)
+2026-08-12T21:38:37.257+09:00  INFO 24217 --- [game-history-lab] [           main] l.g.GameHistoryLabApplicationKt          : No active profile set, falling back to 1 default profile: "default"
+2026-08-12T21:38:37.977+09:00  INFO 24217 --- [game-history-lab] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-08-12T21:38:38.190+09:00  INFO 24217 --- [game-history-lab] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@c97721b
+2026-08-12T21:38:38.191+09:00  INFO 24217 --- [game-history-lab] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-08-12T21:38:38.297+09:00  WARN 24217 --- [game-history-lab] [           main] o.s.b.c.l.AbstractListenerFactoryBean    : org.springframework.batch.infrastructure.item.ItemProcessor is an interface. The implementing class will not be queried for annotation based listener configurations. If using @StepScope on a @Bean method, be sure to return the implementing class so listener annotations can be used.
+2026-08-12T21:38:38.301+09:00  INFO 24217 --- [game-history-lab] [           main] o.s.b.c.step.item.ChunkOrientedTasklet   : DEPRECATION NOTE: The legacy implementation of the chunk-oriented processing model is deprecated as of Spring Batch 6.0 and will be removed in version 7.0.
+2026-08-12T21:38:38.320+09:00  WARN 24217 --- [game-history-lab] [           main] o.s.b.c.l.AbstractListenerFactoryBean    : org.springframework.batch.infrastructure.item.ItemProcessor is an interface. The implementing class will not be queried for annotation based listener configurations. If using @StepScope on a @Bean method, be sure to return the implementing class so listener annotations can be used.
+2026-08-12T21:38:38.320+09:00  INFO 24217 --- [game-history-lab] [           main] o.s.b.c.step.item.ChunkOrientedTasklet   : DEPRECATION NOTE: The legacy implementation of the chunk-oriented processing model is deprecated as of Spring Batch 6.0 and will be removed in version 7.0.
+2026-08-12T21:38:38.403+09:00  INFO 24217 --- [game-history-lab] [           main] l.g.GameHistoryLabApplicationKt          : Started GameHistoryLabApplicationKt in 1.402 seconds (process running for 1.705)
+2026-08-12T21:38:38.474+09:00  INFO 24217 --- [game-history-lab] [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=incrementalGameHistoryReadModelJob]] launched with the following parameters: [{JobParameter{name='failAfterCount', value=0, type=class java.lang.Long, identifying=false},JobParameter{name='upperUpdatedAt', value=2026-08-12T01:00, type=class java.time.LocalDateTime, identifying=true},JobParameter{name='upperGameId', value=9223372036854775807, type=class java.lang.Long, identifying=true},JobParameter{name='lowerUpdatedAt', value=2026-08-11T23:55, type=class java.time.LocalDateTime, identifying=true},JobParameter{name='runId', value=stage4-c3600-r1-20260812T124000Z, type=class java.lang.String, identifying=true},JobParameter{name='lowerGameId', value=0, type=class java.lang.Long, identifying=true}}]
+2026-08-12T21:38:38.536+09:00  INFO 24217 --- [game-history-lab] [           main] o.s.batch.core.step.AbstractStep         : Executing step: [processIncrementalChangesStep]
+2026-08-12T21:38:38.594+09:00  INFO 24217 --- [game-history-lab] [           main] o.s.batch.core.step.AbstractStep         : Step: [processIncrementalChangesStep] executed in 62ms
+2026-08-12T21:38:38.632+09:00  INFO 24217 --- [game-history-lab] [           main] o.s.batch.core.step.AbstractStep         : Executing step: [advanceIncrementalCheckpointStep]
+2026-08-12T21:38:38.643+09:00  INFO 24217 --- [game-history-lab] [           main] o.s.batch.core.step.AbstractStep         : Step: [advanceIncrementalCheckpointStep] executed in 14ms
+2026-08-12T21:38:38.670+09:00  INFO 24217 --- [game-history-lab] [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=incrementalGameHistoryReadModelJob]] completed with the following parameters: [{JobParameter{name='failAfterCount', value=0, type=class java.lang.Long, identifying=false},JobParameter{name='upperUpdatedAt', value=2026-08-12T01:00, type=class java.time.LocalDateTime, identifying=true},JobParameter{name='upperGameId', value=9223372036854775807, type=class java.lang.Long, identifying=true},JobParameter{name='lowerUpdatedAt', value=2026-08-11T23:55, type=class java.time.LocalDateTime, identifying=true},JobParameter{name='runId', value=stage4-c3600-r1-20260812T124000Z, type=class java.lang.String, identifying=true},JobParameter{name='lowerGameId', value=0, type=class java.lang.Long, identifying=true}}] and the following status: [COMPLETED] in 158ms
+STAGE4_STEP name=processIncrementalChangesStep status=COMPLETED read=8 write=8 commit=1 rollback=0
+STAGE4_STEP name=advanceIncrementalCheckpointStep status=COMPLETED read=0 write=0 commit=1 rollback=0
+STAGE4_JOB executionId=176 instanceId=172 status=COMPLETED lowerUpdatedAt=2026-08-11T23:55 lowerGameId=0 upperUpdatedAt=2026-08-12T01:00 durationMs=252
+2026-08-12T21:38:38.676+09:00  INFO 24217 --- [game-history-lab] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-08-12T21:38:38.684+09:00  INFO 24217 --- [game-history-lab] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

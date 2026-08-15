@@ -1,0 +1,58 @@
+result_id=20260812T124000Z
+started_at_utc=2026-08-12T12:38:33Z
+git_commit=b554f6ab3af82fabc2e6a43da111e108be7ca063
+git_status_begin
+ M AGENTS.md
+ M PROJECT_CONTEXT.md
+ M build.gradle.kts
+ M scripts/generate-stage1-data.sh
+ M src/main/kotlin/lab/gamehistory/history/GameHistoryController.kt
+ M src/main/resources/application.yaml
+ M src/main/resources/schema.sql
+ M src/main/resources/stage1-seed.sql
+ M src/test/kotlin/lab/gamehistory/history/GameHistoryApiIntegrationTests.kt
+ M src/test/resources/original-game-history-fixture.sql
+?? benchmarks/
+?? docs/
+?? scripts/capture-stage1-explain.sh
+?? scripts/capture-stage2-explain.sh
+?? scripts/check-stage2-read-model.sh
+?? scripts/check-stage3-batch.sh
+?? scripts/prepare-stage4-schema.sh
+?? scripts/rebuild-stage2-read-model.sh
+?? scripts/run-stage1-benchmark.sh
+?? scripts/run-stage2-benchmark.sh
+?? scripts/run-stage3-batch.sh
+?? scripts/run-stage3-experiment.sh
+?? scripts/run-stage4-experiment.sh
+?? scripts/run-stage4-incremental.sh
+?? scripts/sql/
+?? src/main/kotlin/lab/gamehistory/batch/
+?? src/main/kotlin/lab/gamehistory/history/ReadModelGameHistoryQuery.kt
+?? src/main/resources/batch-schema.sql
+?? src/main/resources/stage2-rebuild-read-model.sql
+?? src/test/kotlin/lab/gamehistory/batch/
+?? src/test/kotlin/lab/gamehistory/history/ReadModelGameHistoryQueryIntegrationTests.kt
+git_status_end
+tracked_diff_sha256=adf82d0404494a18a1d02c65be7759e1b579a36495ca34b5649c1e8f9748beb7
+jar_sha256=db13a350a2dacfd85aeb9cde15cb12575a2b0b60bd8c443439e16b99f55f0c2c
+java_version=openjdk version "21.0.5" 2024-10-15 LTS
+docker_version=27.4.0
+mysql_version=8.4.11
+os=ProductName:		macOS;ProductVersion:		15.7.3;BuildVersion:		24G419;
+hardware=      Chip=Apple M1;      Total Number of Cores=8 (4 performance and 4 efficiency);      Memory=16 GB;
+dataset_seed=20260810
+dataset_before
+shops	games	rounds	round_scores	read_model_rows
+100	1000000	3600000	6900000	1000000
+dataset_before_end
+chunk_size=100
+overlap_seconds=300
+logical_window_seconds=3600
+cadences_seconds=3600,600,300,60
+command=./scripts/run-stage4-experiment.sh 20260812T124000Z
+completed_at_utc=2026-08-12T12:53:57Z
+dataset_after
+shops	games	rounds	round_scores	read_model_rows
+100	1000000	3600000	6900000	1000000
+dataset_after_end
