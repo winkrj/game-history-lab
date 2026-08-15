@@ -37,3 +37,16 @@ CREATE TABLE IF NOT EXISTS round_scores (
         FOREIGN KEY (round_id) REFERENCES rounds (id),
     INDEX idx_round_scores_round_id (round_id)
 );
+
+CREATE TABLE IF NOT EXISTS game_history_read_model (
+    game_id BIGINT NOT NULL,
+    shop_id BIGINT NOT NULL,
+    played_at DATETIME(6) NOT NULL,
+    player_nickname VARCHAR(100) NOT NULL,
+    course_name VARCHAR(100) NOT NULL,
+    total_score BIGINT NOT NULL,
+    round_count BIGINT NOT NULL,
+    game_status VARCHAR(30) NOT NULL,
+    PRIMARY KEY (game_id),
+    INDEX idx_game_history_shop_played_at (shop_id, played_at DESC, game_id DESC)
+);

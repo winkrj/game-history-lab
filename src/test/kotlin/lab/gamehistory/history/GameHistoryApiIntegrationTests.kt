@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -15,11 +16,14 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @Import(TestcontainersConfiguration::class)
 @SpringBootTest
 @AutoConfigureMockMvc
-@Sql("/original-game-history-fixture.sql")
+@Sql(scripts = ["/original-game-history-fixture.sql", "/stage2-rebuild-read-model.sql"])
 class GameHistoryApiIntegrationTests {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
+
+    @Autowired
+    private lateinit var jdbcTemplate: JdbcTemplate
 
     @Test
     fun returnsAggregatedGameHistoryForTheRequestedPeriod() {
@@ -61,6 +65,49 @@ class GameHistoryApiIntegrationTests {
     }
 
     @Test
+    fun returnsTheSameContractFromTheReadModel() {
+        mockMvc.perform(
+            get("/shops/{shopId}/games", 1)
+                .param("from", "2026-01-01T00:00:00Z")
+                .param("to", "2026-02-01T00:00:00Z")
+                .param("page", "1")
+                .param("size", "2")
+                .param("queryMode", "read-model"),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].gameId").value(102))
+            .andExpect(jsonPath("$[0].shopId").value(1))
+            .andExpect(jsonPath("$[0].playedAt").value("2026-01-01T00:00:00Z"))
+            .andExpect(jsonPath("$[0].playerNickname").value("carol"))
+            .andExpect(jsonPath("$[0].courseName").value("Forest Course"))
+            .andExpect(jsonPath("$[0].totalScore").value(0))
+            .andExpect(jsonPath("$[0].roundCount").value(1))
+            .andExpect(jsonPath("$[0].gameStatus").value("IN_PROGRESS"))
+    }
+
+    @Test
+    fun defaultsToReadModelAndKeepsOriginalAsAnExplicitExperimentPath() {
+        jdbcTemplate.update(
+            "UPDATE game_history_read_model SET game_status = 'READ_MODEL_ONLY' WHERE game_id = 100",
+        )
+
+        val request = get("/shops/{shopId}/games", 1)
+            .param("from", "2026-01-03T00:00:00Z")
+            .param("to", "2026-01-04T00:00:00Z")
+            .param("page", "1")
+            .param("size", "1")
+
+        mockMvc.perform(request)
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].gameStatus").value("READ_MODEL_ONLY"))
+
+        mockMvc.perform(request.param("queryMode", "original"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].gameStatus").value("COMPLETED"))
+    }
+
+    @Test
     fun rejectsInvalidPeriodAndPagination() {
         mockMvc.perform(
             get("/shops/{shopId}/games", 1)
@@ -76,6 +123,13 @@ class GameHistoryApiIntegrationTests {
                 .param("size", "0"),
         )
             .andExpect(status().isBadRequest)
+
+        mockMvc.perform(
+            get("/shops/{shopId}/games", 1)
+                .param("from", "2026-01-01T00:00:00Z")
+                .param("to", "2026-02-01T00:00:00Z")
+                .param("queryMode", "unknown"),
+        )
+            .andExpect(status().isBadRequest)
     }
 }
-

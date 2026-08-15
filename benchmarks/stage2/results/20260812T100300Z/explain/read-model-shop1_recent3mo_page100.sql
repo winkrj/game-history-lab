@@ -1,0 +1,1 @@
+SELECT game_id, shop_id, played_at, player_nickname, course_name, total_score, round_count, game_status FROM game_history_read_model WHERE shop_id = 1 AND played_at >= '2025-10-01 00:00:00.000000' AND played_at < '2026-01-01 00:00:00.000000' ORDER BY played_at DESC, game_id DESC LIMIT 20 OFFSET 2000;

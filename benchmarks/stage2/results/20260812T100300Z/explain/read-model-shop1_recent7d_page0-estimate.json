@@ -1,0 +1,44 @@
+{
+  "query_block": {
+    "select_id": 1,
+    "cost_info": {
+      "query_cost": "1826.18"
+    },
+    "ordering_operation": {
+      "using_filesort": false,
+      "table": {
+        "table_name": "game_history_read_model",
+        "access_type": "range",
+        "possible_keys": [
+          "idx_game_history_shop_played_at"
+        ],
+        "key": "idx_game_history_shop_played_at",
+        "used_key_parts": [
+          "shop_id",
+          "played_at"
+        ],
+        "key_length": "16",
+        "rows_examined_per_scan": 1920,
+        "rows_produced_per_join": 1920,
+        "filtered": "100.00",
+        "index_condition": "((`game_history_lab`.`game_history_read_model`.`shop_id` = 1) and (`game_history_lab`.`game_history_read_model`.`played_at` >= TIMESTAMP'2025-12-25 00:00:00') and (`game_history_lab`.`game_history_read_model`.`played_at` < TIMESTAMP'2026-01-01 00:00:00'))",
+        "cost_info": {
+          "read_cost": "1634.18",
+          "eval_cost": "192.00",
+          "prefix_cost": "1826.18",
+          "data_read_per_join": "1M"
+        },
+        "used_columns": [
+          "game_id",
+          "shop_id",
+          "played_at",
+          "player_nickname",
+          "course_name",
+          "total_score",
+          "round_count",
+          "game_status"
+        ]
+      }
+    }
+  }
+}

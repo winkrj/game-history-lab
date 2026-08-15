@@ -1,0 +1,143 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: benchmarks/stage2/k6/game-history.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 4 max VUs, 15m30s max duration (incl. graceful stop):
+              * benchmark: 50 iterations for each of 4 VUs (maxDuration: 15m0s, gracefulStop: 30s)
+
+
+running (00m01.0s), 4/4 VUs, 4 complete and 0 interrupted iterations
+benchmark   [   2% ] 4 VUs  00m01.0s/15m0s  004/200 iters, 50 per VU
+
+running (00m02.0s), 4/4 VUs, 12 complete and 0 interrupted iterations
+benchmark   [   6% ] 4 VUs  00m02.0s/15m0s  012/200 iters, 50 per VU
+
+running (00m03.0s), 4/4 VUs, 20 complete and 0 interrupted iterations
+benchmark   [  10% ] 4 VUs  00m03.0s/15m0s  020/200 iters, 50 per VU
+
+running (00m04.0s), 4/4 VUs, 24 complete and 0 interrupted iterations
+benchmark   [  12% ] 4 VUs  00m04.0s/15m0s  024/200 iters, 50 per VU
+
+running (00m05.0s), 4/4 VUs, 32 complete and 0 interrupted iterations
+benchmark   [  16% ] 4 VUs  00m05.0s/15m0s  032/200 iters, 50 per VU
+
+running (00m06.0s), 4/4 VUs, 40 complete and 0 interrupted iterations
+benchmark   [  20% ] 4 VUs  00m06.0s/15m0s  040/200 iters, 50 per VU
+
+running (00m07.0s), 4/4 VUs, 44 complete and 0 interrupted iterations
+benchmark   [  22% ] 4 VUs  00m07.0s/15m0s  044/200 iters, 50 per VU
+
+running (00m08.0s), 4/4 VUs, 52 complete and 0 interrupted iterations
+benchmark   [  26% ] 4 VUs  00m08.0s/15m0s  052/200 iters, 50 per VU
+
+running (00m09.0s), 4/4 VUs, 60 complete and 0 interrupted iterations
+benchmark   [  30% ] 4 VUs  00m09.0s/15m0s  060/200 iters, 50 per VU
+
+running (00m10.0s), 4/4 VUs, 64 complete and 0 interrupted iterations
+benchmark   [  32% ] 4 VUs  00m10.0s/15m0s  064/200 iters, 50 per VU
+
+running (00m11.0s), 4/4 VUs, 71 complete and 0 interrupted iterations
+benchmark   [  36% ] 4 VUs  00m11.0s/15m0s  071/200 iters, 50 per VU
+
+running (00m12.0s), 4/4 VUs, 76 complete and 0 interrupted iterations
+benchmark   [  38% ] 4 VUs  00m12.0s/15m0s  076/200 iters, 50 per VU
+
+running (00m13.0s), 4/4 VUs, 84 complete and 0 interrupted iterations
+benchmark   [  42% ] 4 VUs  00m13.0s/15m0s  084/200 iters, 50 per VU
+
+running (00m14.0s), 4/4 VUs, 88 complete and 0 interrupted iterations
+benchmark   [  44% ] 4 VUs  00m14.0s/15m0s  088/200 iters, 50 per VU
+
+running (00m15.0s), 4/4 VUs, 96 complete and 0 interrupted iterations
+benchmark   [  48% ] 4 VUs  00m15.0s/15m0s  096/200 iters, 50 per VU
+
+running (00m16.0s), 4/4 VUs, 104 complete and 0 interrupted iterations
+benchmark   [  52% ] 4 VUs  00m16.0s/15m0s  104/200 iters, 50 per VU
+
+running (00m17.0s), 4/4 VUs, 111 complete and 0 interrupted iterations
+benchmark   [  56% ] 4 VUs  00m17.0s/15m0s  111/200 iters, 50 per VU
+
+running (00m18.0s), 4/4 VUs, 116 complete and 0 interrupted iterations
+benchmark   [  58% ] 4 VUs  00m18.0s/15m0s  116/200 iters, 50 per VU
+
+running (00m19.0s), 4/4 VUs, 124 complete and 0 interrupted iterations
+benchmark   [  62% ] 4 VUs  00m19.0s/15m0s  124/200 iters, 50 per VU
+
+running (00m20.0s), 4/4 VUs, 132 complete and 0 interrupted iterations
+benchmark   [  66% ] 4 VUs  00m20.0s/15m0s  132/200 iters, 50 per VU
+
+running (00m21.0s), 4/4 VUs, 136 complete and 0 interrupted iterations
+benchmark   [  68% ] 4 VUs  00m21.0s/15m0s  136/200 iters, 50 per VU
+
+running (00m22.0s), 4/4 VUs, 144 complete and 0 interrupted iterations
+benchmark   [  72% ] 4 VUs  00m22.0s/15m0s  144/200 iters, 50 per VU
+
+running (00m23.0s), 4/4 VUs, 152 complete and 0 interrupted iterations
+benchmark   [  76% ] 4 VUs  00m23.0s/15m0s  152/200 iters, 50 per VU
+
+running (00m24.0s), 4/4 VUs, 156 complete and 0 interrupted iterations
+benchmark   [  78% ] 4 VUs  00m24.0s/15m0s  156/200 iters, 50 per VU
+
+running (00m25.0s), 4/4 VUs, 164 complete and 0 interrupted iterations
+benchmark   [  82% ] 4 VUs  00m25.0s/15m0s  164/200 iters, 50 per VU
+
+running (00m26.0s), 4/4 VUs, 172 complete and 0 interrupted iterations
+benchmark   [  86% ] 4 VUs  00m26.0s/15m0s  172/200 iters, 50 per VU
+
+running (00m27.0s), 4/4 VUs, 180 complete and 0 interrupted iterations
+benchmark   [  90% ] 4 VUs  00m27.0s/15m0s  180/200 iters, 50 per VU
+
+running (00m28.0s), 4/4 VUs, 184 complete and 0 interrupted iterations
+benchmark   [  92% ] 4 VUs  00m28.0s/15m0s  184/200 iters, 50 per VU
+
+running (00m29.0s), 4/4 VUs, 192 complete and 0 interrupted iterations
+benchmark   [  96% ] 4 VUs  00m29.0s/15m0s  192/200 iters, 50 per VU
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate==1' rate=100.00%
+
+    http_req_failed
+    ✓ 'rate==0' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 400     13.347022/s
+    checks_succeeded...: 100.00% 400 out of 400
+    checks_failed......: 0.00%   0 out of 400
+
+    ✓ status is 200
+    ✓ response has requested page size
+
+    HTTP
+    http_req_duration..............: avg=599.01ms min=561.94ms med=586.78ms p(90)=625.38ms p(95)=681.73ms p(99)=776.92ms max=778.96ms
+      { expected_response:true }...: avg=599.01ms min=561.94ms med=586.78ms p(90)=625.38ms p(95)=681.73ms p(99)=776.92ms max=778.96ms
+    http_req_failed................: 0.00%  0 out of 200
+    http_reqs......................: 200    6.673511/s
+
+    EXECUTION
+    iteration_duration.............: avg=599.4ms  min=562.26ms med=587.26ms p(90)=625.69ms p(95)=682.19ms p(99)=777.14ms max=779.33ms
+    iterations.....................: 200    6.673511/s
+    vus............................: 4      min=4        max=4
+    vus_max........................: 4      min=4        max=4
+
+    NETWORK
+    data_received..................: 728 kB 24 kB/s
+    data_sent......................: 35 kB  1.2 kB/s
+
+
+
+
+running (00m30.0s), 0/4 VUs, 200 complete and 0 interrupted iterations
+benchmark ✓ [ 100% ] 4 VUs  00m30.0s/15m0s  200/200 iters, 50 per VU

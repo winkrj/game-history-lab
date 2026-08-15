@@ -1,3 +1,4 @@
+DELETE FROM game_history_read_model;
 DELETE FROM round_scores;
 DELETE FROM rounds;
 DELETE FROM games;

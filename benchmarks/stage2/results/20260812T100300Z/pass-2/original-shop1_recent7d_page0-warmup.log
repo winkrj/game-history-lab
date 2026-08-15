@@ -1,0 +1,65 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: benchmarks/stage2/k6/game-history.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 4 max VUs, 15m30s max duration (incl. graceful stop):
+              * benchmark: 5 iterations for each of 4 VUs (maxDuration: 15m0s, gracefulStop: 30s)
+
+
+running (00m01.0s), 4/4 VUs, 4 complete and 0 interrupted iterations
+benchmark   [  20% ] 4 VUs  00m01.0s/15m0s  04/20 iters, 5 per VU
+
+running (00m02.0s), 4/4 VUs, 8 complete and 0 interrupted iterations
+benchmark   [  40% ] 4 VUs  00m02.0s/15m0s  08/20 iters, 5 per VU
+
+running (00m03.0s), 4/4 VUs, 16 complete and 0 interrupted iterations
+benchmark   [  80% ] 4 VUs  00m03.0s/15m0s  16/20 iters, 5 per VU
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate==1' rate=100.00%
+
+    http_req_failed
+    ✓ 'rate==0' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 40      12.037327/s
+    checks_succeeded...: 100.00% 40 out of 40
+    checks_failed......: 0.00%   0 out of 40
+
+    ✓ status is 200
+    ✓ response has requested page size
+
+    HTTP
+    http_req_duration..............: avg=663.62ms min=614.7ms  med=647.06ms p(90)=710.65ms p(95)=710.76ms p(99)=711.97ms max=712.27ms
+      { expected_response:true }...: avg=663.62ms min=614.7ms  med=647.06ms p(90)=710.65ms p(95)=710.76ms p(99)=711.97ms max=712.27ms
+    http_req_failed................: 0.00%  0 out of 20
+    http_reqs......................: 20     6.018663/s
+
+    EXECUTION
+    iteration_duration.............: avg=664.59ms min=615.22ms med=650.42ms p(90)=710.93ms p(95)=711.3ms  p(99)=712.37ms max=712.64ms
+    iterations.....................: 20     6.018663/s
+    vus............................: 4      min=4       max=4
+    vus_max........................: 4      min=4       max=4
+
+    NETWORK
+    data_received..................: 73 kB  22 kB/s
+    data_sent......................: 3.5 kB 1.1 kB/s
+
+
+
+
+running (00m03.3s), 0/4 VUs, 20 complete and 0 interrupted iterations
+benchmark ✓ [ 100% ] 4 VUs  00m03.3s/15m0s  20/20 iters, 5 per VU

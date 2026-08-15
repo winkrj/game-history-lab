@@ -65,7 +65,8 @@ class Stage1SeedIntegrationTests {
                 .param("from", "2025-01-01T00:00:00Z")
                 .param("to", "2026-01-01T00:00:00Z")
                 .param("page", "0")
-                .param("size", "20"),
+                .param("size", "20")
+                .param("queryMode", "original"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.length()").value(20))
@@ -163,4 +164,3 @@ class Stage1SeedIntegrationTests {
         return games + rounds + scores
     }
 }
-

@@ -1,0 +1,13 @@
+Variable_name	Value
+Handler_read_first	117
+Handler_read_key	261845668
+Handler_read_last	0
+Handler_read_next	761599131
+Handler_read_prev	0
+Handler_read_rnd	397
+Handler_read_rnd_next	9072533
+Innodb_buffer_pool_read_requests	2810087361
+Innodb_buffer_pool_reads	24955302
+Innodb_data_read	410060147200
+Innodb_data_reads	25028105
+Innodb_rows_read	790397448

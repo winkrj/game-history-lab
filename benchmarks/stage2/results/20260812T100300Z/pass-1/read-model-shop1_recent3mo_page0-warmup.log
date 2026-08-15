@@ -1,0 +1,54 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: benchmarks/stage2/k6/game-history.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 4 max VUs, 15m30s max duration (incl. graceful stop):
+              * benchmark: 5 iterations for each of 4 VUs (maxDuration: 15m0s, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate==1' rate=100.00%
+
+    http_req_failed
+    ✓ 'rate==0' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 40      1562.62208/s
+    checks_succeeded...: 100.00% 40 out of 40
+    checks_failed......: 0.00%   0 out of 40
+
+    ✓ status is 200
+    ✓ response has requested page size
+
+    HTTP
+    http_req_duration..............: avg=4.37ms min=2.93ms med=3.82ms p(90)=6.59ms p(95)=6.61ms p(99)=6.7ms  max=6.72ms
+      { expected_response:true }...: avg=4.37ms min=2.93ms med=3.82ms p(90)=6.59ms p(95)=6.61ms p(99)=6.7ms  max=6.72ms
+    http_req_failed................: 0.00%  0 out of 20
+    http_reqs......................: 20     781.31104/s
+
+    EXECUTION
+    iteration_duration.............: avg=5.06ms min=3.08ms med=4.02ms p(90)=9.41ms p(95)=9.44ms p(99)=9.51ms max=9.52ms
+    iterations.....................: 20     781.31104/s
+
+    NETWORK
+    data_received..................: 73 kB  2.8 MB/s
+    data_sent......................: 3.5 kB 138 kB/s
+
+
+
+
+running (00m00.0s), 0/4 VUs, 20 complete and 0 interrupted iterations
+benchmark ✓ [ 100% ] 4 VUs  00m00.0s/15m0s  20/20 iters, 5 per VU

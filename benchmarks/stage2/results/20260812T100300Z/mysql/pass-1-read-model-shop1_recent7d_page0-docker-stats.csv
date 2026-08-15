@@ -1,0 +1,2 @@
+timestamp_utc,cpu_percent,memory_usage,block_io
+2026-08-12T10:16:13Z,15.31%,643.1MiB / 7.654GiB,487GB / 9.66GB

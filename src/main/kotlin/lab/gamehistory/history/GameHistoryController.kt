@@ -13,7 +13,8 @@ import java.time.Instant
 @RestController
 @RequestMapping("/shops/{shopId}/games")
 class GameHistoryController(
-    private val query: OriginalGameHistoryQuery,
+    private val originalQuery: OriginalGameHistoryQuery,
+    private val readModelQuery: ReadModelGameHistoryQuery,
 ) {
 
     @GetMapping
@@ -27,6 +28,7 @@ class GameHistoryController(
         to: Instant,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(defaultValue = "read-model") queryMode: String,
     ): List<GameHistoryResponse> {
         if (shopId <= 0) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "shopId must be positive")
@@ -40,16 +42,30 @@ class GameHistoryController(
         if (size !in 1..MAX_PAGE_SIZE) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "size must be between 1 and $MAX_PAGE_SIZE")
         }
+        if (queryMode != "original" && queryMode != "read-model") {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "queryMode must be original or read-model")
+        }
 
         val offset = page.toLong() * size
+        val histories = if (queryMode == "read-model") {
+            readModelQuery.findByShopAndPeriod(
+                shopId = shopId,
+                fromInclusive = from,
+                toExclusive = to,
+                limit = size,
+                offset = offset,
+            )
+        } else {
+            originalQuery.findByShopAndPeriod(
+                shopId = shopId,
+                fromInclusive = from,
+                toExclusive = to,
+                limit = size,
+                offset = offset,
+            )
+        }
 
-        return query.findByShopAndPeriod(
-            shopId = shopId,
-            fromInclusive = from,
-            toExclusive = to,
-            limit = size,
-            offset = offset,
-        ).map { history ->
+        return histories.map { history ->
             GameHistoryResponse(
                 gameId = history.gameId,
                 shopId = history.shopId,
@@ -78,4 +94,3 @@ data class GameHistoryResponse(
     val roundCount: Long,
     val gameStatus: String,
 )
-
