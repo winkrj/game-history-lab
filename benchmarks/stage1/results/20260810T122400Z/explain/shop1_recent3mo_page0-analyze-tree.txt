@@ -1,0 +1,11 @@
+-> Limit: 20 row(s)  (actual time=2695..2695 rows=20 loops=1)
+    -> Sort: g.played_at DESC, g.id DESC, limit input to 20 row(s) per chunk  (actual time=2695..2695 rows=20 loops=1)
+        -> Stream results  (cost=915901 rows=180086) (actual time=1421..2689 rows=25205 loops=1)
+            -> Group aggregate: sum(rs.score), count(distinct r.id)  (cost=915901 rows=180086) (actual time=1421..2672 rows=25205 loops=1)
+                -> Nested loop left join  (cost=846810 rows=690911) (actual time=1421..2600 rows=177689 loops=1)
+                    -> Nested loop left join  (cost=126455 rows=196093) (actual time=1421..1686 rows=91993 loops=1)
+                        -> Sort: g.id, g.played_at, g.player_nickname, g.course_name, g.game_status  (cost=61919 rows=51784) (actual time=1420..1424 rows=25205 loops=1)
+                            -> Index range scan on g using idx_games_shop_played_at over (shop_id = 1 AND '2026-01-01 00:00:00.000000' < played_at <= '2025-10-01 00:00:00.000000'), with index condition: ((g.shop_id = 1) and (g.played_at >= TIMESTAMP'2025-10-01 00:00:00') and (g.played_at < TIMESTAMP'2026-01-01 00:00:00'))  (cost=61919 rows=51784) (actual time=8.35..1403 rows=25205 loops=1)
+                        -> Covering index lookup on r using uk_rounds_game_number (game_id=g.id)  (cost=0.868 rows=3.79) (actual time=0.00969..0.0101 rows=3.6 loops=25205)
+                    -> Index lookup on rs using idx_round_scores_round_id (round_id=r.id)  (cost=3.32 rows=3.52) (actual time=0.00947..0.00974 rows=1.89 loops=91993)
+

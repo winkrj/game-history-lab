@@ -1,0 +1,149 @@
+{
+    "metrics": {
+        "http_req_tls_handshaking": {
+            "max": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 200,
+            "thresholds": {
+                "rate==0": false
+            },
+            "value": 0
+        },
+        "data_sent": {
+            "count": 31200,
+            "rate": 131.778534717811
+        },
+        "iteration_duration": {
+            "max": 9273.196458,
+            "avg": 4735.281467025,
+            "min": 3776.385208,
+            "med": 4471.9528965,
+            "p(90)": 5956.3036375,
+            "p(95)": 6424.46391075,
+            "p(99)": 9272.41484967
+        },
+        "http_req_waiting": {
+            "max": 9272.735,
+            "avg": 4734.55495,
+            "min": 3773.436,
+            "med": 4470.369000000001,
+            "p(90)": 5955.9156,
+            "p(95)": 6424.058599999999,
+            "p(99)": 9272.00216
+        },
+        "http_req_blocked": {
+            "max": 1.637,
+            "avg": 0.04319500000000012,
+            "min": 0.001,
+            "med": 0.004,
+            "p(90)": 0.007,
+            "p(95)": 0.009099999999999981,
+            "p(99)": 1.58816
+        },
+        "vus_max": {
+            "value": 4,
+            "min": 4,
+            "max": 4
+        },
+        "http_reqs": {
+            "count": 200,
+            "rate": 0.8447341969090449
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 4734.736745000001,
+            "min": 3773.907,
+            "med": 4471.012000000001,
+            "p(90)": 5955.992700000001,
+            "p(95)": 6424.08225,
+            "p(99)": 9272.04715,
+            "max": 9272.835
+        },
+        "http_req_connecting": {
+            "p(99)": 0.24503,
+            "max": 0.287,
+            "avg": 0.005004999999999999,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_sending": {
+            "avg": 0.029824999999999977,
+            "min": 0.003,
+            "med": 0.012,
+            "p(90)": 0.035,
+            "p(95)": 0.06874999999999987,
+            "p(99)": 0.4413499999999996,
+            "max": 0.952
+        },
+        "data_received": {
+            "count": 728000,
+            "rate": 3074.8324767489235
+        },
+        "iterations": {
+            "rate": 0.8447341969090449,
+            "count": 200
+        },
+        "checks": {
+            "passes": 400,
+            "fails": 0,
+            "thresholds": {
+                "rate==1": false
+            },
+            "value": 1
+        },
+        "http_req_duration": {
+            "p(90)": 5955.992700000001,
+            "p(95)": 6424.08225,
+            "p(99)": 9272.04715,
+            "max": 9272.835,
+            "avg": 4734.736745000001,
+            "min": 3773.907,
+            "med": 4471.012000000001
+        },
+        "http_req_receiving": {
+            "max": 2.06,
+            "avg": 0.15197000000000002,
+            "min": 0.016,
+            "med": 0.071,
+            "p(90)": 0.3503000000000001,
+            "p(95)": 0.5182999999999998,
+            "p(99)": 1.334109999999999
+        },
+        "vus": {
+            "min": 4,
+            "max": 4,
+            "value": 4
+        }
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "status is 200": {
+                    "id": "6210a8cd14cd70477eba5c5e4cb3fb5f",
+                    "passes": 200,
+                    "fails": 0,
+                    "name": "status is 200",
+                    "path": "::status is 200"
+                },
+                "response has requested page size": {
+                    "fails": 0,
+                    "name": "response has requested page size",
+                    "path": "::response has requested page size",
+                    "id": "7e1c659d5ff7289a9b044ecb83e62819",
+                    "passes": 200
+                }
+            }
+    }
+}

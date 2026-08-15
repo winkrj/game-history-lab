@@ -1,0 +1,65 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: benchmarks/stage1/k6/game-history.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 4 max VUs, 15m30s max duration (incl. graceful stop):
+              * benchmark: 5 iterations for each of 4 VUs (maxDuration: 15m0s, gracefulStop: 30s)
+
+
+running (00m01.0s), 4/4 VUs, 4 complete and 0 interrupted iterations
+benchmark   [  20% ] 4 VUs  00m01.0s/15m0s  04/20 iters, 5 per VU
+
+running (00m02.0s), 4/4 VUs, 12 complete and 0 interrupted iterations
+benchmark   [  60% ] 4 VUs  00m02.0s/15m0s  12/20 iters, 5 per VU
+
+running (00m03.0s), 4/4 VUs, 12 complete and 0 interrupted iterations
+benchmark   [  60% ] 4 VUs  00m03.0s/15m0s  12/20 iters, 5 per VU
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate==1' rate=100.00%
+
+    http_req_failed
+    ✓ 'rate==0' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 40      10.687163/s
+    checks_succeeded...: 100.00% 40 out of 40
+    checks_failed......: 0.00%   0 out of 40
+
+    ✓ status is 200
+    ✓ response has requested page size
+
+    HTTP
+    http_req_duration..............: avg=746.25ms min=606.63ms med=625.35ms p(90)=1.2s p(95)=1.2s p(99)=1.2s max=1.2s
+      { expected_response:true }...: avg=746.25ms min=606.63ms med=625.35ms p(90)=1.2s p(95)=1.2s p(99)=1.2s max=1.2s
+    http_req_failed................: 0.00%  0 out of 20
+    http_reqs......................: 20     5.343582/s
+
+    EXECUTION
+    iteration_duration.............: avg=748.29ms min=606.94ms med=633.07ms p(90)=1.2s p(95)=1.2s p(99)=1.2s max=1.2s
+    iterations.....................: 20     5.343582/s
+    vus............................: 4      min=4       max=4
+    vus_max........................: 4      min=4       max=4
+
+    NETWORK
+    data_received..................: 73 kB  20 kB/s
+    data_sent......................: 3.1 kB 834 B/s
+
+
+
+
+running (00m03.7s), 0/4 VUs, 20 complete and 0 interrupted iterations
+benchmark ✓ [ 100% ] 4 VUs  00m03.7s/15m0s  20/20 iters, 5 per VU

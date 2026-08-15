@@ -1,0 +1,142 @@
+{
+  "query_block": {
+    "select_id": 1,
+    "cost_info": {
+      "query_cost": "843411.77"
+    },
+    "ordering_operation": {
+      "using_temporary_table": true,
+      "using_filesort": true,
+      "grouping_operation": {
+        "using_filesort": true,
+        "nested_loop": [
+          {
+            "table": {
+              "table_name": "s",
+              "access_type": "const",
+              "possible_keys": [
+                "PRIMARY"
+              ],
+              "key": "PRIMARY",
+              "used_key_parts": [
+                "id"
+              ],
+              "key_length": "8",
+              "ref": [
+                "const"
+              ],
+              "rows_examined_per_scan": 1,
+              "rows_produced_per_join": 1,
+              "filtered": "100.00",
+              "using_index": true,
+              "cost_info": {
+                "read_cost": "0.00",
+                "eval_cost": "0.10",
+                "prefix_cost": "0.00",
+                "data_read_per_join": "416"
+              },
+              "used_columns": [
+                "id"
+              ]
+            }
+          },
+          {
+            "table": {
+              "table_name": "g",
+              "access_type": "range",
+              "possible_keys": [
+                "idx_games_shop_played_at"
+              ],
+              "key": "idx_games_shop_played_at",
+              "used_key_parts": [
+                "shop_id",
+                "played_at"
+              ],
+              "key_length": "16",
+              "rows_examined_per_scan": 51784,
+              "rows_produced_per_join": 51784,
+              "filtered": "100.00",
+              "index_condition": "((`game_history_lab`.`g`.`shop_id` = 1) and (`game_history_lab`.`g`.`played_at` >= TIMESTAMP'2025-10-01 00:00:00') and (`game_history_lab`.`g`.`played_at` < TIMESTAMP'2026-01-01 00:00:00'))",
+              "cost_info": {
+                "read_cost": "56740.46",
+                "eval_cost": "5178.40",
+                "prefix_cost": "61918.86",
+                "data_read_per_join": "47M"
+              },
+              "used_columns": [
+                "id",
+                "shop_id",
+                "played_at",
+                "player_nickname",
+                "course_name",
+                "game_status"
+              ]
+            }
+          },
+          {
+            "table": {
+              "table_name": "r",
+              "access_type": "ref",
+              "possible_keys": [
+                "uk_rounds_game_number"
+              ],
+              "key": "uk_rounds_game_number",
+              "used_key_parts": [
+                "game_id"
+              ],
+              "key_length": "8",
+              "ref": [
+                "game_history_lab.g.id"
+              ],
+              "rows_examined_per_scan": 3,
+              "rows_produced_per_join": 196092,
+              "filtered": "100.00",
+              "using_index": true,
+              "cost_info": {
+                "read_cost": "46097.13",
+                "eval_cost": "19609.28",
+                "prefix_cost": "127625.28",
+                "data_read_per_join": "4M"
+              },
+              "used_columns": [
+                "id",
+                "game_id"
+              ]
+            }
+          },
+          {
+            "table": {
+              "table_name": "rs",
+              "access_type": "ref",
+              "possible_keys": [
+                "idx_round_scores_round_id"
+              ],
+              "key": "idx_round_scores_round_id",
+              "used_key_parts": [
+                "round_id"
+              ],
+              "key_length": "8",
+              "ref": [
+                "game_history_lab.r.id"
+              ],
+              "rows_examined_per_scan": 3,
+              "rows_produced_per_join": 690911,
+              "filtered": "100.00",
+              "cost_info": {
+                "read_cost": "646695.34",
+                "eval_cost": "69091.15",
+                "prefix_cost": "843411.77",
+                "data_read_per_join": "15M"
+              },
+              "used_columns": [
+                "id",
+                "round_id",
+                "score"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

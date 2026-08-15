@@ -1,0 +1,27 @@
+run_id=20260810T122400Z
+started_at_utc=2026-08-10T12:23:37Z
+base_url=http://localhost:8080
+vus=4
+warmup_iterations_per_vu=5
+measured_iterations_per_vu=50
+measured_requests_per_case=200
+macos_idle_sleep_prevention=true
+mysql_container_id=61216334cfbe1d5beb46cad8cc0143cf75e246b4fd633f8fd17943d7095fa303
+pass_1_order=shop1_recent7d_page0,shop1_recent3mo_page0,shop1_recent3mo_page100
+pass_2_order=shop1_recent3mo_page100,shop1_recent3mo_page0,shop1_recent7d_page0
+git_commit=b554f6ab3af82fabc2e6a43da111e108be7ca063
+git_status_begin
+ M PROJECT_CONTEXT.md
+?? benchmarks/
+?? docs/
+?? scripts/capture-stage1-explain.sh
+?? scripts/run-stage1-benchmark.sh
+git_status_end
+k6 v2.0.0 (commit/devel, go1.26.3, darwin/arm64)
+openjdk version "21.0.5" 2024-10-15 LTS
+OpenJDK Runtime Environment Corretto-21.0.5.11.1 (build 21.0.5+11-LTS)
+OpenJDK 64-Bit Server VM Corretto-21.0.5.11.1 (build 21.0.5+11-LTS, mixed mode, sharing)
+docker_client=27.4.0 docker_server=27.4.0
+docker_cpus=8 docker_memory_bytes=8218251264
+mysql_version=8.4.11	buffer_pool_bytes=134217728	performance_schema=1
+completed_at_utc=2026-08-10T12:43:59Z

@@ -1,0 +1,154 @@
+SCHEMA_NAME	DIGEST_TEXT	COUNT_STAR	total_seconds	average_ms	SUM_ROWS_SENT	SUM_ROWS_EXAMINED	SUM_CREATED_TMP_TABLES	SUM_CREATED_TMP_DISK_TABLES	SUM_SORT_ROWS	SUM_SORT_MERGE_PASSES	SUM_SELECT_SCAN	SUM_NO_INDEX_USED	SUM_NO_GOOD_INDEX_USED	QUERY_SAMPLE_TEXT
+game_history_lab	SELECT `g` . `id` AS `game_id` , `s` . `id` AS `shop_id` , `g` . `played_at` , `g` . `player_nickname` , `g` . `course_name` , COALESCE ( SUM ( `rs` . `score` ) , ? ) AS `total_score` , COUNT ( DISTINCTROW `r` . `id` ) AS `round_count` , `g` . `game_status` FROM `games` `g` JOIN `shops` `s` ON `s` . `id` = `g` . `shop_id` LEFT JOIN `rounds` `r` ON `r` . `game_id` = `g` . `id` LEFT JOIN `round_scores` `rs` ON `rs` . `round_id` = `r` . `id` WHERE `s` . `id` = ? AND `g` . `played_at` >= ? AND `g` . `played_at` < ? GROUP BY `g` . `id` , `s` . `id` , `g` . `played_at` , `g` . `player_nickname` , `g` . `course_name` , `g` . `game_status` ORDER BY `g` . `played_at` DESC , `g` . `id` DESC LIMIT ? OFFSET ?	785	3081.9749	3926.083	20200	208947002	993	0	17253695	2647	0	0	0	SELECT
+    g.id AS game_id,
+    s.id AS shop_id,
+    g.played_at,
+    g.player_nickname,
+    g.course_name,
+    COALESCE(SUM(rs.score), 0) AS total_score,
+    COUNT(DISTINCT r.id) AS round_count,
+    g.game_status
+FROM games g
+JOIN shops s ON s.id = g.shop_id
+LEFT JOIN rounds r ON r.game_id = g.id
+LEFT JOIN round_scores rs ON rs.round_id = r.id
+WHERE s.id = 1
+  AND g.played_at >= '2025-10-01 00:00:00'
+  AND g.played_at < '2026-01-01 00:00:00'
+GROUP BY
+    g.id,
+    s.id,
+    g.played_at,
+    g.player_nickname,
+    g.course_name,
+    g.game_status
+ORDER BY g.played_at DESC, g.id DESC
+LIMIT 20 OFFSET 2000
+game_history_lab	SELECT ( SELECT COUNT ( * ) FROM `shops` ) , ( SELECT COUNT ( * ) FROM `games` ) , ( SELECT COUNT ( * ) FROM `rounds` ) , ( SELECT COUNT ( * ) FROM `round_scores` ) , ( SELECT COALESCE ( SUM ( CASE WHEN MOD ( `FLOOR` ( ( `id` - ? ) / ? ) + ?, ... ) = ? THEN ? WHEN MOD ( `FLOOR` ( ( `id` - ? ) / ? ) + ?, ... ) IN (...) THEN ? ELSE ? END ) , ? ) FROM `games` ) , ( SELECT COALESCE ( SUM ( CASE WHEN MOD ( `FLOOR` ( ( `id` - ? ) / ? ) + ?, ... ) = ? THEN ? WHEN MOD ( `FLOOR` ( ( `id` - ? ) / ? ) + ?, ... ) IN (...) THEN ? ELSE ? END ) , ? ) FROM `games` ) , ( SELECT COUNT ( * ) FROM `games` `game` LEFT JOIN `shops` `shop` ON `shop` . `id` = `game` . `shop_id` WHERE `shop` . `id` IS NULL ) + ( SELECT COUNT ( * ) FROM `rounds` `round_row` LEFT JOIN `games` `game` ON `game` . `id` = `round_row` . `game_id` WHERE `game` . `id` IS NULL ) + ( SELECT COUNT ( * ) FROM `round_scores` `score` LEFT JOIN `rounds` `round_row` ON `round_row` . `id` = `score` . `round_id` WHERE `round_row` . `id` IS NULL ) , ( SELECT COUNT ( * ) FROM `games` WHERE `shop_id` = ? ) , ( SELECT COUNT ( * ) FROM `games` WHERE `shop_id` = ? ) , ( SELECT COUNT ( * ) FROM `games` WHERE `id` < ? OR `id` > ? ) , ( SELECT COUNT ( * ) FROM `games` WHERE `shop_id` != CASE WHEN MOD ( ( `id` - ? ) + ?, ... ) = ? THEN ? ELSE ? + MOD ( (	1	64.5649	64564.944	1	42209092	0	0	0	0	12	1	0	SELECT
+            (SELECT COUNT(*) FROM shops),
+            (SELECT COUNT(*) FROM games),
+            (SELECT COUNT(*) FROM rounds),
+            (SELECT COUNT(*) FROM round_scores),
+            (SELECT COALESCE(SUM(CASE
+                WHEN MOD(FLOOR((id - 1) / 10) + 20260810, 20) = 0 THEN 0
+                WHEN MOD(FLOOR((id - 1) / 10) + 20260810, 20) IN (1, 2) THEN 2
+                ELSE 4
+            END), 0) FROM games),
+            (SELECT COALESCE(SUM(CASE
+                WHEN MOD(FLOOR((id - 1) / 10) + 20260810, 20) = 0 THEN 0
+                WHEN MOD(FLOOR((id - 1) / 10) + 20260810, 20) IN (1, 2) THEN 1
+                ELSE 8
+            END), 0) FROM games),
+            (SELECT COUNT(*) FROM games game LEFT JOIN shops shop ON shop.id = game.shop_id WHERE shop.id IS NULL)
+                + (SELECT COUNT(*) FROM rounds round_row LEFT JOIN games game ON game.id = round_row.game_id WHERE game.id IS NULL)
+                + (SELECT COUNT(*) FROM round_scores score LEFT JOIN rounds round_row ON round_ro...
+game_history_lab	SELECT COUNT ( * ) FROM `round_scores` `rs` LEFT JOIN `rounds` `r` ON `r` . `id` = `rs` . `round_id` WHERE `r` . `id` IS NULL	1	6.0348	6034.765	1	13800000	0	0	0	0	1	0	0	SELECT COUNT(*) FROM round_scores rs LEFT JOIN rounds r ON r.id=rs.round_id WHERE r.id IS NULL
+game_history_lab	SELECT ? AS `check_name` , COUNT ( * ) AS `orphan_count` FROM `rounds` `r` LEFT JOIN `games` `g` ON `g` . `id` = `r` . `game_id` WHERE `g` . `id` IS NULL UNION ALL SELECT ? , COUNT ( * ) FROM `round_scores` `rs` LEFT JOIN `rounds` `r` ON `r` . `id` = `rs` . `round_id` WHERE `r` . `id` IS NULL	1	5.5005	5500.460	2	21000000	0	0	0	0	2	0	0	SELECT 'games_round_orphans' AS check_name, COUNT(*) AS orphan_count FROM rounds r LEFT JOIN games g ON g.id=r.game_id WHERE g.id IS NULL UNION ALL SELECT 'round_scores_round_orphans', COUNT(*) FROM round_scores rs LEFT JOIN rounds r ON r.id=rs.round_id WHERE r.id IS NULL
+game_history_lab	EXPLAIN ANALYZE FORMAT = `TREE` SELECT `g` . `id` AS `game_id` , `s` . `id` AS `shop_id` , `g` . `played_at` , `g` . `player_nickname` , `g` . `course_name` , COALESCE ( SUM ( `rs` . `score` ) , ? ) AS `total_score` , COUNT ( DISTINCTROW `r` . `id` ) AS `round_count` , `g` . `game_status` FROM `games` `g` JOIN `shops` `s` ON `s` . `id` = `g` . `shop_id` LEFT JOIN `rounds` `r` ON `r` . `game_id` = `g` . `id` LEFT JOIN `round_scores` `rs` ON `rs` . `round_id` = `r` . `id` WHERE `s` . `id` = ? AND `g` . `played_at` >= ? AND `g` . `played_at` < ? GROUP BY `g` . `id` , `s` . `id` , `g` . `played_at` , `g` . `player_nickname` , `g` . `course_name` , `g` . `game_status` ORDER BY `g` . `played_at` DESC , `g` . `id` DESC LIMIT ? OFFSET ?	3	4.6105	1536.820	3	656116	3	0	54390	8	0	0	0	EXPLAIN ANALYZE FORMAT=TREE 
+        SELECT
+            g.id AS game_id,
+            s.id AS shop_id,
+            g.played_at,
+            g.player_nickname,
+            g.course_name,
+            COALESCE(SUM(rs.score), 0) AS total_score,
+            COUNT(DISTINCT r.id) AS round_count,
+            g.game_status
+        FROM games g
+        JOIN shops s ON s.id = g.shop_id
+        LEFT JOIN rounds r ON r.game_id = g.id
+        LEFT JOIN round_scores rs ON rs.round_id = r.id
+        WHERE s.id = 1
+          AND g.played_at >= '2025-10-01 00:00:00.000000'
+          AND g.played_at < '2026-01-01 00:00:00.000000'
+        GROUP BY
+            g.id,
+            s.id,
+            g.played_at,
+            g.player_nickname,
+            g.course_name,
+            g.game_status
+        ORDER BY g.played_at DESC, g.id DESC
+        LIMIT 20 OFFSET 0
+game_history_lab	SELECT ( SELECT COUNT ( * ) FROM `shops` ) `shops` , ( SELECT COUNT ( * ) FROM `games` ) `games` , ( SELECT COUNT ( * ) FROM `rounds` ) `rounds` , ( SELECT COUNT ( * ) FROM `round_scores` ) `round_scores` , ( SELECT COUNT ( * ) FROM `games` WHERE `shop_id` = ? ) `popular_games` , ( SELECT COUNT ( * ) FROM `games` WHERE `shop_id` = ? ) `typical_games` , ( SELECT MIN ( `played_at` ) FROM `games` ) `first_played_at` , ( SELECT MAX ( `played_at` ) FROM `games` ) `last_played_at`	1	3.1173	3117.331	1	2109092	0	0	0	0	6	0	0	SELECT (SELECT COUNT(*) FROM shops) shops, (SELECT COUNT(*) FROM games) games, (SELECT COUNT(*) FROM rounds) rounds, (SELECT COUNT(*) FROM round_scores) round_scores, (SELECT COUNT(*) FROM games WHERE shop_id=1) popular_games, (SELECT COUNT(*) FROM games WHERE shop_id=2) typical_games, (SELECT MIN(played_at) FROM games) first_played_at, (SELECT MAX(played_at) FROM games) last_played_at
+game_history_lab	SELECT COUNT ( * ) FROM `round_scores`	1	2.4197	2419.678	1	0	0	0	0	0	1	0	0	SELECT COUNT(*) FROM round_scores
+game_history_lab	SELECT ? AS `metric` , COUNT ( * ) AS VALUE FROM `shops` UNION ALL SELECT ? , COUNT ( * ) FROM `games` UNION ALL SELECT ? , COUNT ( * ) FROM `rounds` UNION ALL SELECT ? , COUNT ( * ) FROM `round_scores` UNION ALL SELECT ? , COUNT ( * ) FROM `games` WHERE `shop_id` = ? UNION ALL SELECT ? , COUNT ( * ) FROM `games` WHERE `shop_id` = ?	1	2.0392	2039.158	6	109091	0	0	0	0	4	0	0	SELECT 'shops' AS metric, COUNT(*) AS value FROM shops
+    UNION ALL SELECT 'games', COUNT(*) FROM games
+    UNION ALL SELECT 'rounds', COUNT(*) FROM rounds
+    UNION ALL SELECT 'round_scores', COUNT(*) FROM round_scores
+    UNION ALL SELECT 'popular_shop_1_games', COUNT(*) FROM games WHERE shop_id = 1
+    UNION ALL SELECT 'typical_shop_2_games', COUNT(*) FROM games WHERE shop_id = 2
+game_history_lab	SELECT COUNT ( * ) FROM `rounds` `r` LEFT JOIN `games` `g` ON `g` . `id` = `r` . `game_id` WHERE `g` . `id` IS NULL	1	1.7910	1790.994	1	7200000	0	0	0	0	1	0	0	SELECT COUNT(*) FROM rounds r LEFT JOIN games g ON g.id=r.game_id WHERE g.id IS NULL
+game_history_lab	SELECT COUNT ( * ) FROM `rounds`	1	0.8570	856.999	1	0	0	0	0	0	1	0	0	SELECT COUNT(*) FROM rounds
+game_history_lab	SELECT MIN ( `played_at` ) AS `first_played_at` , MAX ( `played_at` ) AS `last_played_at` FROM `games`	1	0.1935	193.522	1	1000000	0	0	0	0	1	0	0	SELECT MIN(played_at) AS first_played_at, MAX(played_at) AS last_played_at
+    FROM games
+game_history_lab	SELECT MIN ( `played_at` ) , MAX ( `played_at` ) FROM `games`	1	0.1176	117.575	1	1000000	0	0	0	0	1	0	0	SELECT MIN(played_at), MAX(played_at) FROM games
+game_history_lab	SELECT COUNT ( * ) FROM `games`	1	0.0936	93.636	1	0	0	0	0	0	1	0	0	SELECT COUNT(*) FROM games
+game_history_lab	SHOW INDEX FROM `games`	1	0.0176	17.564	4	25	1	0	4	0	1	0	0	SHOW INDEX FROM games
+game_history_lab	SELECT COUNT ( * ) FROM `games` WHERE `shop_id` = ?	2	0.0101	5.050	2	109091	0	0	0	0	0	0	0	SELECT COUNT(*) FROM games WHERE shop_id=1
+game_history_lab	SELECT @@SESSION . `auto_increment_increment` AS `auto_increment_increment` , @@`character_set_client` AS `character_set_client` , @@`character_set_connection` AS `character_set_connection` , @@`character_set_results` AS `character_set_results` , @@`character_set_server` AS `character_set_server` , @@`collation_server` AS `collation_server` , @@`collation_connection` AS `collation_connection` , @@`init_connect` AS `init_connect` , @@`interactive_timeout` AS `interactive_timeout` , @@`license` AS `license` , @@`lower_case_table_names` AS `lower_case_table_names` , @@`max_allowed_packet` AS `max_allowed_packet` , @@`net_write_timeout` AS `net_write_timeout` , @@`performance_schema` AS `performance_schema` , @@`sql_mode` AS `sql_mode` , @@`system_time_zone` AS `system_time_zone` , @@`time_zone` AS `time_zone` , @@`transaction_isolation` AS `transaction_isolation` , @@`wait_timeout` AS `wait_timeout`	13	0.0055	0.426	13	13	0	0	0	0	0	0	0	/* mysql-connector-j-9.7.0 (Revision: 0aade1f13bcc98faf7dda5c02e782481eb291f62) */SELECT  @@session.auto_increment_increment AS auto_increment_increment, @@character_set_client AS character_set_client, @@character_set_connection AS character_set_connection, @@character_set_results AS character_set_results, @@character_set_server AS character_set_server, @@collation_server AS collation_server, @@collation_connection AS collation_connection, @@init_connect AS init_connect, @@interactive_timeout AS interactive_timeout, @@license AS license, @@lower_case_table_names AS lower_case_table_names, @@max_allowed_packet AS max_allowed_packet, @@net_write_timeout AS net_write_timeout, @@performance_schema AS performance_schema, @@sql_mode AS sql_mode, @@system_time_zone AS system_time_zone, @@time_zone AS time_zone, @@transaction_isolation AS transaction_isolation, @@wait_timeout AS wait_timeout
+game_history_lab	SHOW INDEX FROM `rounds`	1	0.0055	5.451	3	20	1	0	3	0	1	0	0	SHOW INDEX FROM rounds
+game_history_lab	SELECT COUNT ( * ) FROM `games` WHERE `shop_id` = ? AND `played_at` >= ? AND `played_at` < ?	2	0.0047	2.338	2	27125	0	0	0	0	0	0	0	SELECT COUNT(*) FROM games WHERE shop_id=1 AND played_at >= '2025-10-01' AND played_at < '2026-01-01'
+game_history_lab	EXPLAIN FORMAT = JSON SELECT `g` . `id` AS `game_id` , `s` . `id` AS `shop_id` , `g` . `played_at` , `g` . `player_nickname` , `g` . `course_name` , COALESCE ( SUM ( `rs` . `score` ) , ? ) AS `total_score` , COUNT ( DISTINCTROW `r` . `id` ) AS `round_count` , `g` . `game_status` FROM `games` `g` JOIN `shops` `s` ON `s` . `id` = `g` . `shop_id` LEFT JOIN `rounds` `r` ON `r` . `game_id` = `g` . `id` LEFT JOIN `round_scores` `rs` ON `rs` . `round_id` = `r` . `id` WHERE `s` . `id` = ? AND `g` . `played_at` >= ? AND `g` . `played_at` < ? GROUP BY `g` . `id` , `s` . `id` , `g` . `played_at` , `g` . `player_nickname` , `g` . `course_name` , `g` . `game_status` ORDER BY `g` . `played_at` DESC , `g` . `id` DESC LIMIT ? OFFSET ?	3	0.0042	1.400	3	0	3	0	0	0	0	0	0	EXPLAIN FORMAT=JSON 
+        SELECT
+            g.id AS game_id,
+            s.id AS shop_id,
+            g.played_at,
+            g.player_nickname,
+            g.course_name,
+            COALESCE(SUM(rs.score), 0) AS total_score,
+            COUNT(DISTINCT r.id) AS round_count,
+            g.game_status
+        FROM games g
+        JOIN shops s ON s.id = g.shop_id
+        LEFT JOIN rounds r ON r.game_id = g.id
+        LEFT JOIN round_scores rs ON rs.round_id = r.id
+        WHERE s.id = 1
+          AND g.played_at >= '2025-12-25 00:00:00.000000'
+          AND g.played_at < '2026-01-01 00:00:00.000000'
+        GROUP BY
+            g.id,
+            s.id,
+            g.played_at,
+            g.player_nickname,
+            g.course_name,
+            g.game_status
+        ORDER BY g.played_at DESC, g.id DESC
+        LIMIT 20 OFFSET 0
+game_history_lab	SELECT COUNT ( * ) FROM `shops`	1	0.0041	4.059	1	0	0	0	0	0	1	0	0	SELECT COUNT(*) FROM shops
+game_history_lab	CREATE TABLE IF NOT EXISTS `shops` ( `id` INT8 NOT NULL AUTO_INCREMENT , NAME VARCHARACTER (?) NOT NULL , PRIMARY KEY ( `id` ) )	1	0.0038	3.809	0	0	0	0	0	0	0	0	0	CREATE TABLE IF NOT EXISTS shops ( id BIGINT NOT NULL AUTO_INCREMENT, name VARCHAR(100) NOT NULL, PRIMARY KEY (id) )
+game_history_lab	SELECT @@`version_comment` LIMIT ?	13	0.0026	0.199	13	13	0	0	0	0	0	0	0	select @@version_comment limit 1
+game_history_lab	SHOW INDEX FROM `round_scores`	1	0.0020	1.994	2	17	1	0	2	0	1	0	0	SHOW INDEX FROM round_scores
+game_history_lab	SELECT @@SESSION . `transaction_read_only`	17	0.0018	0.103	17	17	0	0	0	0	0	0	0	SELECT @@session.transaction_read_only
+game_history_lab	EXPLAIN FORMAT = `TRADITIONAL` SELECT `g` . `id` AS `game_id` , `s` . `id` AS `shop_id` , `g` . `played_at` , `g` . `player_nickname` , `g` . `course_name` , COALESCE ( SUM ( `rs` . `score` ) , ? ) AS `total_score` , COUNT ( DISTINCTROW `r` . `id` ) AS `round_count` , `g` . `game_status` FROM `games` `g` JOIN `shops` `s` ON `s` . `id` = `g` . `shop_id` LEFT JOIN `rounds` `r` ON `r` . `game_id` = `g` . `id` LEFT JOIN `round_scores` `rs` ON `rs` . `round_id` = `r` . `id` WHERE `s` . `id` = ? AND `g` . `played_at` >= ? AND `g` . `played_at` < ? GROUP BY `g` . `id` , `s` . `id` , `g` . `played_at` , `g` . `player_nickname` , `g` . `course_name` , `g` . `game_status` ORDER BY `g` . `played_at` DESC , `g` . `id` DESC LIMIT ? OFFSET ?	3	0.0014	0.468	12	0	3	0	0	0	0	0	0	EXPLAIN FORMAT=TRADITIONAL 
+        SELECT
+            g.id AS game_id,
+            s.id AS shop_id,
+            g.played_at,
+            g.player_nickname,
+            g.course_name,
+            COALESCE(SUM(rs.score), 0) AS total_score,
+            COUNT(DISTINCT r.id) AS round_count,
+            g.game_status
+        FROM games g
+        JOIN shops s ON s.id = g.shop_id
+        LEFT JOIN rounds r ON r.game_id = g.id
+        LEFT JOIN round_scores rs ON rs.round_id = r.id
+        WHERE s.id = 1
+          AND g.played_at >= '2025-12-25 00:00:00.000000'
+          AND g.played_at < '2026-01-01 00:00:00.000000'
+        GROUP BY
+            g.id,
+            s.id,
+            g.played_at,
+            g.player_nickname,
+            g.course_name,
+            g.game_status
+        ORDER BY g.played_at DESC, g.id DESC
+        LIMIT 20 OFFSET 0
+game_history_lab	SET `character_set_results` = ?	13	0.0013	0.097	0	0	0	0	0	0	0	0	0	SET character_set_results = NULL
+game_history_lab	CREATE TABLE IF NOT EXISTS `games` ( `id` INT8 NOT NULL AUTO_INCREMENT , `shop_id` INT8 NOT NULL , `played_at` DATETIME (?) NOT NULL , `player_nickname` VARCHARACTER (?) NOT NULL , `course_name` VARCHARACTER (?) NOT NULL , `game_status` VARCHARACTER (?) NOT NULL , PRIMARY KEY ( `id` ) , CONSTRAINT `fk_games_shop` FOREIGN KEY ( `shop_id` ) REFERENCES `shops` ( `id` ) , INDEX `idx_games_shop_played_at` ( `shop_id` , `played_at` DESC , `id` DESC ) )	1	0.0010	0.984	0	0	0	0	0	0	0	0	0	CREATE TABLE IF NOT EXISTS games ( id BIGINT NOT NULL AUTO_INCREMENT, shop_id BIGINT NOT NULL, played_at DATETIME(6) NOT NULL, player_nickname VARCHAR(100) NOT NULL, course_name VARCHAR(100) NOT NULL, game_status VARCHAR(30) NOT NULL, PRIMARY KEY (id), CONSTRAINT fk_games_shop FOREIGN KEY (shop_id) REFERENCES shops (id), INDEX idx_games_shop_played_at (shop_id, played_at DESC, id DESC) )
+game_history_lab	SET `autocommit` = ?	13	0.0009	0.071	0	0	0	0	0	0	0	0	0	SET autocommit=1
+game_history_lab	CREATE TABLE IF NOT EXISTS `rounds` ( `id` INT8 NOT NULL AUTO_INCREMENT , `game_id` INT8 NOT NULL , `round_number` INTEGER NOT NULL , PRIMARY KEY ( `id` ) , CONSTRAINT `fk_rounds_game` FOREIGN KEY ( `game_id` ) REFERENCES `games` ( `id` ) , CONSTRAINT `uk_rounds_game_number` UNIQUE ( `game_id` , `round_number` ) )	1	0.0008	0.831	0	0	0	0	0	0	0	0	0	CREATE TABLE IF NOT EXISTS rounds ( id BIGINT NOT NULL AUTO_INCREMENT, game_id BIGINT NOT NULL, round_number INT NOT NULL, PRIMARY KEY (id), CONSTRAINT fk_rounds_game FOREIGN KEY (game_id) REFERENCES games (id), CONSTRAINT uk_rounds_game_number UNIQUE (game_id, round_number) )
+game_history_lab	CREATE TABLE IF NOT EXISTS `round_scores` ( `id` INT8 NOT NULL AUTO_INCREMENT , `round_id` INT8 NOT NULL , `score` INTEGER NOT NULL , PRIMARY KEY ( `id` ) , CONSTRAINT `fk_round_scores_round` FOREIGN KEY ( `round_id` ) REFERENCES `rounds` ( `id` ) , INDEX `idx_round_scores_round_id` ( `round_id` ) )	1	0.0006	0.569	0	0	0	0	0	0	0	0	0	CREATE TABLE IF NOT EXISTS round_scores ( id BIGINT NOT NULL AUTO_INCREMENT, round_id BIGINT NOT NULL, score INT NOT NULL, PRIMARY KEY (id), CONSTRAINT fk_round_scores_round FOREIGN KEY (round_id) REFERENCES rounds (id), INDEX idx_round_scores_round_id (round_id) )
+game_history_lab	SELECT @@SESSION . `transaction_isolation`	1	0.0002	0.153	1	1	0	0	0	0	0	0	0	SELECT @@session.transaction_isolation

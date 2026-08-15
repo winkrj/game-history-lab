@@ -1,0 +1,27 @@
+
+        SELECT
+            g.id AS game_id,
+            s.id AS shop_id,
+            g.played_at,
+            g.player_nickname,
+            g.course_name,
+            COALESCE(SUM(rs.score), 0) AS total_score,
+            COUNT(DISTINCT r.id) AS round_count,
+            g.game_status
+        FROM games g
+        JOIN shops s ON s.id = g.shop_id
+        LEFT JOIN rounds r ON r.game_id = g.id
+        LEFT JOIN round_scores rs ON rs.round_id = r.id
+        WHERE s.id = 1
+          AND g.played_at >= '2025-10-01 00:00:00.000000'
+          AND g.played_at < '2026-01-01 00:00:00.000000'
+        GROUP BY
+            g.id,
+            s.id,
+            g.played_at,
+            g.player_nickname,
+            g.course_name,
+            g.game_status
+        ORDER BY g.played_at DESC, g.id DESC
+        LIMIT 20 OFFSET 0;
+    
