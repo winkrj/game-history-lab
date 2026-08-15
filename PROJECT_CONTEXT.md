@@ -12,25 +12,25 @@ The primary audience is a Java/Spring developer learning Kotlin while examining 
 
 ## Current phase
 
-Stage 1 is in progress. The normalized Source schema, Original JOIN query, representative HTTP API, and deterministic large-data generator are implemented. Query correctness and the generator are verified with small MySQL data sets. The full performance data load, execution-plan capture, and performance baseline have not been run yet.
+Stage 1–5 implementation and experiments are complete, and the project is in documentation finalization. The final evidence-backed technical conclusion is recorded in [`docs/final-comparison.md`](docs/final-comparison.md). The Stage 2 plain-SQL rebuild, Stage 3 bulk/recovery job, and Stage 4 incremental polling job remain intact as measured baselines; Stage 5 keeps Debezium/Kafka only for the accepted seconds-level continuous-change requirement.
 
-The remaining Stage 1 work must establish:
-
-- generate the full default data set in the measurement environment;
-- baseline p95 latency, throughput, SQL execution plan, rows read, and resource usage;
-- evidence of the JOIN bottleneck, or evidence supporting a larger data set.
+Stage 1 evidence remains in [`docs/experiments/stage1-original-join.md`](docs/experiments/stage1-original-join.md). Stage 2 evidence is in [`docs/experiments/stage2-read-model.md`](docs/experiments/stage2-read-model.md). Stage 3 evidence is in [`docs/experiments/stage3-batch-recovery.md`](docs/experiments/stage3-batch-recovery.md), with its retained run under `benchmarks/stage3/results/20260812T111000Z`. Stage 4 evidence is in [`docs/experiments/stage4-incremental-freshness.md`](docs/experiments/stage4-incremental-freshness.md), with the retained run under `benchmarks/stage4/results/20260812T124000Z`. Stage 5 evidence is in [`docs/experiments/stage5-cdc-kafka.md`](docs/experiments/stage5-cdc-kafka.md), with its retained run under `benchmarks/stage5/results/20260813T124200Z`.
 
 ## Current architecture
 
 ```text
-Spring MVC application
-        |
-   Spring JDBC
-        |
-      MySQL
+Spring MVC application / non-web batch command ── Spring JDBC/Batch ── MySQL
+                                                                       │
+                                                  Debezium Connect ← binlog
+                                                                       │
+                                                                     Kafka
+                                                                       │
+                                      Spring Kafka CDC consumer ───────┘
+                                                │
+                                  latest Source projection UPSERT
 ```
 
-There is one deployable Spring Boot application. Docker Compose provides only local MySQL. Tests use a real MySQL container through Testcontainers. Stage 1 query code is grouped in the `history` package; no future-stage packages or deployable components are scaffolded.
+There is still one deployable Spring Boot application. The normal process serves Spring MVC; explicit non-web modes launch Batch commands or the CDC consumer. Docker Compose provides MySQL 8.4, one Kafka 4.1.1 broker, and one Debezium Connect 3.4.3.Final worker for the local experiment. Tests keep database semantics on MySQL through Testcontainers; real Debezium/Kafka delivery is retained as Stage 5 experiment evidence rather than added to every verification run.
 
 The Stage 1 Source model uses four normalized tables:
 
@@ -41,7 +41,23 @@ shops
             └─ round_scores
 ```
 
-`GameHistoryController` exposes the representative API and calls `OriginalGameHistoryQuery` directly. The query joins these tables and aggregates one result per game. It includes games without rounds or scores, uses a half-open `[from, to)` time range, and applies `playedAt DESC, gameId DESC` before limit/offset pagination.
+`GameHistoryController` keeps the representative API and now defaults to `ReadModelGameHistoryQuery`. The optional experiment selector `queryMode=original` retains the Original path through the same endpoint, request validation, response type, period semantics, sorting, and pagination. There is no strategy hierarchy or future-stage routing abstraction.
+
+The Stage 2 projection is:
+
+```text
+game_history_read_model
+  game_id (PK)
+  shop_id
+  played_at
+  player_nickname
+  course_name
+  total_score
+  round_count
+  game_status
+```
+
+The only secondary index is `(shop_id, played_at DESC, game_id DESC)`. It supports the fixed shop/range filter and deterministic order without request-time JOIN or aggregate work. No covering index or Source foreign key was added.
 
 ## Technology decisions
 
@@ -58,6 +74,17 @@ shops
 - `totalScore` is the sum of all RoundScore rows for a game. `roundCount` counts distinct Round rows, including a round that currently has no score rows.
 - `GET /shops/{shopId}/games` requires ISO-8601 instant values for `from` and `to`. `page` is zero-based and defaults to 0; `size` defaults to 20 and must be between 1 and 100.
 - The API returns a JSON array of game-history rows. A total count and a pagination wrapper are omitted because the current comparison only requires the fixed result fields and query pagination.
+- The retained Stage 2 baseline creates the full projection with plain SQL: `TRUNCATE` followed by one `INSERT ... SELECT` over the Original LEFT JOIN/Aggregate semantics. That path itself has no job state, chunk, retry, checkpoint, or scheduling support.
+- Stage 3 adds Spring Batch 6.0.4 because the observed recovery problem requires durable status and checkpoints. `@EnableJdbcJobRepository` stores Job/Step executions and execution contexts in MySQL; application startup does not automatically launch the job.
+- The one Stage 3 job reads Source game IDs in ascending keyset pages and writes each 1,000-ID chunk with one JOIN/Aggregate range UPSERT. `runId`, mode, and bounds identify a JobInstance; failure injection is non-identifying so restart can disable it while retaining the same JobInstance.
+- Both `full` and `backfill` are the same idempotent range operation. `full` uses IDs 1–1,000,000 and `backfill` uses explicit narrower bounds. There is no batch DSL, scheduler, retry policy, partitioning, or additional deployable component.
+- Stage 4 change discovery reads `(updated_at, game_id)` tuples from `games`, `rounds`, and `round_scores`; child changes map back to their game. Each Source table has only the polling index required for that range. A five-minute overlap replays recent tuples to mitigate, but not eliminate, statement-time/commit-order races.
+- The incremental job fixes an upper tuple, pages affected games in tuple order, and persists its paging state with each projection chunk. Its separate final step advances `incremental_read_model_checkpoint` only after all chunks succeed. The writer re-queries current Source state for each affected chunk and UPSERTs the complete game projection, making replay idempotent.
+- Stage 4 incremental processing remains an explicit non-web command and has no scheduler framework.
+- Stage 5 enables MySQL ROW/FULL binlog and captures only `games`, `rounds`, and `round_scores`. The connector uses `snapshot.mode=no_data` because Batch owns initial population; coordinating the Batch-complete/connector-start handoff remains unresolved.
+- Table records resolve `games.id`, `rounds.game_id`, or the `round_scores.round_id` parent lookup to an affected game. CDC payload fields are not treated as projection data. Stage 4 and Stage 5 share `GameHistoryProjectionUpdater`, which re-runs the current Source JOIN/Aggregate and whole-row UPSERT.
+- The consumer uses one partition per captured table, `AckMode.RECORD`, a JDBC listener transaction, and a stopping error handler. DB commit precedes offset commit; failures before listener success roll back and redeliver after a same-group restart. A DB-commit/offset-commit gap can replay and is handled by idempotency, not exactly-once semantics.
+- Inserts and updates are the Stage 5 scope. Re-parenting, physical deletion, retry/DLQ policy, Kafka durability/resilience, and Snapshot + Catch-up are not implemented.
 
 ## Stage 1 performance data
 
@@ -82,7 +109,17 @@ Generation replaces all Source rows and is intentionally separate from normal ve
 
 Normal `./scripts/verify.sh` runs the same SQL with only 200 games and never loads the default million-game data set. At that test size the deterministic result is 100 shops, 200 games, 720 rounds, and 1,380 round scores; the test also reseeds and compares every logical Source row. The CLI generation and completion-check path was separately exercised at this small size against an isolated local database.
 
-Future benchmark queries should use shop 1 as the popular shop and shop 2 as a typical shop. With the fixed upper bound `to=2026-01-01T00:00:00Z`, use `from=2025-12-25T00:00:00Z` for seven days and `from=2025-10-01T00:00:00Z` for roughly three months. A later page such as `page=100&size=20` is available for the popular-shop three-month case. These are workload coordinates, not measured performance results.
+The full default data set was loaded locally on 2026-08-10 in 134.05 seconds. `./scripts/check-stage1-data.sh` then confirmed 100 shops, 1,000,000 games, 3,600,000 rounds, 6,900,000 round scores, zero child orphans, shop 1 with 100,000 games, shop 2 with 9,091 games, and the expected fixed date bounds.
+
+The Stage 1 baseline query set is fixed to shop 1 and `size=20`:
+
+- seven days, page 0: `from=2025-12-25T00:00:00Z`, `to=2026-01-01T00:00:00Z`, `page=0`;
+- three months, page 0: `from=2025-10-01T00:00:00Z`, `to=2026-01-01T00:00:00Z`, `page=0`;
+- three months, later page: the same range with `page=100`, an offset of 2,000.
+
+The ranges contain 1,920 and 25,205 popular-shop games respectively. Stage 1 used k6 with four virtual users, five warm-up iterations per virtual user, and 50 measured iterations per virtual user. Each case therefore has 200 measured HTTP requests in each of two passes, with the second pass reversing case order. All 1,200 measured requests succeeded. Across the two passes, p95 ranges were 789.24–853.60 ms, 4,685.38–6,424.08 ms, and 6,784.37–7,526.99 ms in query-set order. Throughput ranges were 5.95–6.03, 0.84–0.89, and 0.71–0.77 requests/second. The ranges are retained instead of pooling samples so local order/cache variation stays visible.
+
+EXPLAIN ANALYZE confirms that the existing Source indexes avoid a full games-table scan, but the three-month range still expands 25,205 games to 91,993 rounds and 177,689 joined rows before grouping all 25,205 games and sorting for the final page. Both page 0 and page 100 read the same upstream range; offset does not avoid JOIN/Aggregate work. No index or query tuning was performed after observing this baseline.
 
 ## Constraints
 
@@ -108,9 +145,68 @@ For local development:
 2. Run `./gradlew bootRun`.
 3. Run `docker compose down` when finished. Add `--volumes` only when intentionally deleting local database data.
 
-## Open questions for Stage 1
+Stage 3 final verification on 2026-08-12:
 
-- Load-generation tool and the format/location for baseline evidence.
-- Whether the initial Source indexes need adjustment after recording the first MySQL execution plan.
+- `./scripts/verify.sh`: passed (`BUILD SUCCESSFUL`; 13 tests, zero failures/errors).
+- Stage 3 Testcontainers integration tests: normal chunks, deterministic failure, same-instance restart, bounded backfill, and projection equality passed.
+- `./scripts/check-stage3-batch.sh`: JDBC Job/Step metadata remained queryable; local Source/Read Model counts were 1,000,000/1,000,000 with zero missing or extra rows; exhaustive equality and representative pages passed.
+- `git diff --check`: passed.
+- Reviewer: Critical 0 / High 0. The result-ID path/SQL safety finding was fixed with a strict token validation and reverified. The remaining Low warning is Spring Batch 6's deprecated legacy chunk builder path; it does not affect this Stage's behavior and must be revisited before Batch 7.
 
-Resolve these only as part of Stage 1, before implementing the affected behavior.
+Stage 4 final verification on 2026-08-12:
+
+- `./scripts/verify.sh`: passed (`BUILD SUCCESSFUL`; 16 tests, zero failures/errors).
+- Stage 4 Testcontainers integration tests: new/status/score propagation, same-timestamp tuple boundary, idempotent replay, deterministic chunk failure, same-instance restart, durable cursor behavior, and Source/projection equality passed.
+- Actual run `20260812T124000Z`: cadence correctness passed for all four profiles; exact boundary read two remaining equal-timestamp games; failed execution committed four rows and left the durable cursor unchanged; restart processed the remaining four and converged; replay checksum stayed unchanged; final exhaustive one-million-row equality passed.
+- `git diff --check`: passed.
+- Reviewer: Critical 0 / High 0. The non-blocking measurement caveat that each profile's first run includes seven common initialization-replay rows is explicitly documented.
+
+Stage 5 verification on 2026-08-13:
+
+- Actual MySQL → Debezium → Kafka → consumer delivery passed for new game, status, round, and score changes. The final exhaustive checker matched all 1,000,002 Source/projection rows and representative pages.
+- Twenty real-clock freshness samples measured p50 395 ms, p95 450 ms, max 468 ms, with zero missing/error samples.
+- The initial deterministic failure left game-topic offset 24 at lag one and a same-group restart advanced it to 25. A retained follow-up probe made the rollback state explicit at offset 25/log end 26/lag one; same-group restart redelivered that record, advanced to offset 26 with zero lag, and restored Source/Read Model equality.
+- A corrected fresh `earliest` group actually applied 31 retained records; the tracked projection checksum remained `3287816278` before and after. The earlier zero-record `latest` attempt is retained and explicitly excluded.
+- `./scripts/verify.sh` passed with 19 tests and zero failures/errors; `git diff --check` passed. Independent review finished Critical 0 / High 0 / Medium 0 / Low 0 after connector/task readiness and replay zero-lag assertions were tightened.
+
+## Stage 2 measured result
+
+The unchanged Source has 1,000,000 games, 3,600,000 rounds, and 6,900,000 round scores. The first Read Model build produced exactly 1,000,000 rows in 42.2492 seconds. Two later full rebuilds took 26.9366 and 25.3001 seconds. The initial rebuild plus exhaustive Source-projection equality and three representative page comparisons took 126.59 seconds end to end.
+
+The Stage 2 benchmark remeasured both paths with the same jar and DB: four VUs, 20 warm-up requests and 200 measured requests per path/case/pass, two reversed passes, and the same Stage 1 query coordinates. All 2,400 measured requests succeeded.
+
+- Seven-day page 0 p95: Original 681.74–1,020.96 ms; Read Model 3.77–10.46 ms.
+- Three-month page 0 p95: Original 6,245.20–10,861.08 ms; Read Model 6.96–10.49 ms.
+- Three-month page 100 p95: Original 8,746.66–9,700.80 ms; Read Model 23.58–27.54 ms.
+- Original rows read per request: 22,045 for seven days and 289,842 for both three-month cases.
+- Read Model rows read per request: 20 for both page-0 cases and 2,020 for page 100.
+
+EXPLAIN ANALYZE shows the Read Model path as one ordered composite-index range scan with no request-time JOIN, aggregate, temporary table, or filesort. It read 20 rows for page 0 and 2,020 for page 100. The remeasured Original path retained the four-table nested joins, aggregation of up to 177,689 joined rows, temporary table, and filesort.
+
+## Stage 3 measured result
+
+Run `20260812T111000Z` used the unchanged seed `20260810` dataset: 100 shops, 1,000,000 games, 3,600,000 rounds, and 6,900,000 round scores. The plain SQL build took 385.5919 seconds for SQL alone. Its wrapper took 722.67 seconds including the exhaustive equality and representative-page checks. This was substantially slower than Stage 2's 25–42 second observations; the Stage 3 run records the value but does not attribute a cause or treat cross-stage timings as directly comparable.
+
+The normal Batch JobExecution took 312.2380 seconds and wrote 1,000,000 rows in 1,001 commits with zero rollbacks. Its process elapsed time was 330.87 seconds. The exhaustive Source/projection checker then confirmed all one million rows and all representative pages.
+
+A deterministic failure at `gameId=250001` produced a FAILED JobExecution and StepExecution. Metadata recorded read 251,000, write 250,000, commit 250, rollback 1; the Read Model contained exactly the committed 250,000-row prefix. Restart with the same identifying parameters and failure disabled created a second JobExecution for the same JobInstance, read/wrote the remaining 750,000 rows, and completed in 34.7788 job seconds (37.48 process seconds). The final exhaustive check found no missing, extra, or mismatched rows.
+
+A bounded backfill of inclusive IDs 400,001–410,000 read and wrote exactly 10,000 rows in 11 commits and 0.6868 job seconds (3.64 process seconds). The experiment first corrupted only that projection range; after backfill, exhaustive Source/projection equality passed and the checksum of every row outside the range was unchanged.
+
+The retained simple baseline was also interrupted during its single INSERT. It exited 1 and remained at zero rows after its earlier TRUNCATE. It had no persisted run state or restart position; recovery still means invoking a full rebuild and its checks. A partial simple rebuild would require authoring and validating one-off range SQL because the baseline command exposes no range parameter.
+
+## Remaining decisions
+
+Spring Batch is justified for this laboratory's bulk/recovery responsibility: it made status, committed counts, failure position, same-instance restart, and bounded backfill explicit. The trade-off is a Batch dependency, nine metadata tables, configuration, and chunk/job parameters. This experiment does not claim that Batch is always faster; the one ordered run is susceptible to cache and host-state effects.
+
+The Batch UPSERT path deliberately does not TRUNCATE, so an existing complete projection stays queryable while committed chunks are refreshed. It does not provide atomic whole-model publication, a consistent single Source snapshot across all chunks, or cleanup of projection rows whose Source game was deleted. Initial population can still expose a partial projection. Versioned/shadow tables and atomic switching remain unimplemented.
+
+Stage 4 showed that periodic incremental Batch is sufficient for a five-to-ten-minute target under the sparse controlled workload. All insert, status, score, and same-timestamp changes converged without a full rebuild. Measured maximum sample lags were 599.351 seconds at ten minutes, 299.323 seconds at five minutes, and about 59.4 seconds at one minute.
+
+The cost rises as cadence shrinks. Over the same logical hour, 60/10/5/1-minute profiles ran 1/6/12/60 jobs, selected 8/17/29/90 affected-game rows because of overlap replay, and generated 273/1,660/3,330/16,537 global MySQL Questions. The one-minute profile had 25 empty runs (41.7%) and cannot guarantee a strict one-minute bound because arbitrary arrival can wait nearly 60 seconds before processing begins.
+
+CDC evaluation now has evidence only if the accepted requirement is strict sub-minute or reliably bounded one-minute propagation. Updated-time polling also retains a bounded long-transaction race beyond its five-minute overlap. If five-to-ten-minute freshness is acceptable, the current incremental path is adequate and CDC/Kafka should not be added. Physical Source deletion, atomic publication, and whole-model snapshot consistency remain separate unresolved problems.
+
+Stage 5 accepted the seconds-level requirement and measured normal local CDC visibility at p50/p95/max 395/450/468 ms over 20 samples with no missing changes. Unlike Stage 4, it performs no scheduled change-discovery query during idle time; it still incurs binlog/replication work and one current-Source projection query per event. The observed speed is worth the added Kafka/Connect/offset lifecycle only while the seconds-level requirement holds.
+
+Batch and CDC now have evidence-backed complementary responsibilities. Batch remains initial load, rebuild, bounded backfill, and bulk recovery. CDC/Kafka handles continuous post-handoff insert/update propagation. The next decision is not automatically another technology: Batch-to-CDC handoff, poison-record recovery, and delete semantics remain candidates only if their operational requirements are accepted.
