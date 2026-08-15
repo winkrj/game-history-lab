@@ -1,0 +1,9 @@
+completed_at_utc=2026-08-13T12:42:23Z
+samples	p50_ms	p95_ms	max_ms	missing
+20	395	450	468	0
+duration_seconds	questions_delta
+10	6
+scenarios	freshness_samples	questions_delta
+5	20	490
+records_applied	checksum_before	checksum_after	equal
+31	3287816278	3287816278	1

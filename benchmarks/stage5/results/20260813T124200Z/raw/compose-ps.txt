@@ -1,0 +1,4 @@
+NAME                         IMAGE                                  COMMAND                  SERVICE   CREATED              STATUS                        PORTS
+game-history-lab-connect-1   quay.io/debezium/connect:3.4.3.Final   "/docker-entrypoint.…"   connect   About a minute ago   Up About a minute (healthy)   8778/tcp, 0.0.0.0:8083->8083/tcp, 9092/tcp
+game-history-lab-kafka-1     apache/kafka:4.1.1                     "/__cacert_entrypoin…"   kafka     5 minutes ago        Up 5 minutes (healthy)        9092/tcp, 0.0.0.0:29092->29092/tcp
+game-history-lab-mysql-1     mysql:8.4                              "docker-entrypoint.s…"   mysql     5 minutes ago        Up 5 minutes (healthy)        33060/tcp, 0.0.0.0:3307->3306/tcp

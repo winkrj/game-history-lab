@@ -12,6 +12,14 @@ spring:
   batch:
     job:
       enabled: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    consumer:
+      group-id: ${CDC_CONSUMER_GROUP:game-history-read-model-cdc}
+      auto-offset-reset: latest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 stage3:
   batch:
@@ -20,3 +28,8 @@ stage3:
 stage4:
   incremental:
     chunk-size: 100
+
+stage5:
+  cdc:
+    enabled: false
+    fail-on-game-id: 0

@@ -1,0 +1,1 @@
+{"name":"game-history-mysql","connector":{"state":"RUNNING","worker_id":"172.21.0.4:8083","version":"3.4.3.Final"},"tasks":[{"id":0,"state":"RUNNING","worker_id":"172.21.0.4:8083","version":"3.4.3.Final"}],"type":"source"}

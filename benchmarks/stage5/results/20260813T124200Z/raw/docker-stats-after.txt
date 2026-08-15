@@ -1,0 +1,7 @@
+CONTAINER ID   NAME                         CPU %     MEM USAGE / LIMIT     MEM %     NET I/O          BLOCK I/O         PIDS
+91623248d84a   game-history-lab-connect-1   1.59%     863.7MiB / 7.654GiB   11.02%    404kB / 380kB    721kB / 319kB     62
+cd00f7ef1504   game-history-lab-kafka-1     3.86%     399.5MiB / 7.654GiB   5.10%     666kB / 736kB    1.02MB / 9.15MB   117
+988a9f655226   game-history-lab-mysql-1     1.03%     630.7MiB / 7.654GiB   8.05%     319kB / 492kB    13.1GB / 197MB    46
+6a7ee185196c   katsurank-grafana            0.34%     256.4MiB / 7.654GiB   3.27%     230MB / 786MB    18.5MB / 152MB    67
+aaa13e09c320   katsurank-prometheus         0.51%     201.9MiB / 7.654GiB   2.58%     2.27GB / 449MB   155MB / 282MB     15
+02c59b366af4   katsurank-postgres           0.00%     37.43MiB / 7.654GiB   0.48%     1.58GB / 2.9GB   16.6MB / 56.1MB   6

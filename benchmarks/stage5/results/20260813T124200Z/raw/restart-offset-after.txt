@@ -1,0 +1,5 @@
+
+GROUP                           TOPIC                                      PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                                     HOST            CLIENT-ID
+stage5-failure-20260813T124200Z game-history.game_history_lab.round_scores 0          4               4               0               consumer-stage5-failure-20260813T124200Z-1-a9ba7f29-824b-4b3c-aedf-add2f8abd62a /172.21.0.1     consumer-stage5-failure-20260813T124200Z-1
+stage5-failure-20260813T124200Z game-history.game_history_lab.rounds       0          2               2               0               consumer-stage5-failure-20260813T124200Z-1-a9ba7f29-824b-4b3c-aedf-add2f8abd62a /172.21.0.1     consumer-stage5-failure-20260813T124200Z-1
+stage5-failure-20260813T124200Z game-history.game_history_lab.games        0          25              25              0               consumer-stage5-failure-20260813T124200Z-1-a9ba7f29-824b-4b3c-aedf-add2f8abd62a /172.21.0.1     consumer-stage5-failure-20260813T124200Z-1

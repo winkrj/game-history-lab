@@ -1,0 +1,14 @@
+ Container game-history-lab-kafka-1  Running
+ Container game-history-lab-mysql-1  Running
+ Container game-history-lab-connect-1  Running
+ Container game-history-lab-mysql-1  Waiting
+ Container game-history-lab-kafka-1  Waiting
+ Container game-history-lab-kafka-1  Healthy
+ Container game-history-lab-mysql-1  Healthy
+ Container game-history-lab-kafka-1  Waiting
+ Container game-history-lab-connect-1  Waiting
+ Container game-history-lab-mysql-1  Waiting
+ Container game-history-lab-mysql-1  Healthy
+ Container game-history-lab-kafka-1  Healthy
+ Container game-history-lab-connect-1  Healthy
+{"name":"game-history-mysql","connector":{"state":"RUNNING","worker_id":"172.21.0.4:8083","version":"3.4.3.Final"},"tasks":[{"id":0,"state":"RUNNING","worker_id":"172.21.0.4:8083","version":"3.4.3.Final"}],"type":"source"}

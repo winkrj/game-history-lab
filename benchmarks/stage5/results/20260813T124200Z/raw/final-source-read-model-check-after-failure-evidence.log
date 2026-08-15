@@ -1,0 +1,8 @@
++---------------------+---------+
+| metric              | value   |
++---------------------+---------+
+| source_games        | 1000002 |
+| read_model_rows     | 1000002 |
+| popular_shop_1_rows |  100002 |
++---------------------+---------+
+Stage 2 Read Model verification passed: all 1000002 rows and three representative pages match the Source projection.

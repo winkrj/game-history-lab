@@ -1,0 +1,5 @@
+reason=retain explicit projection mismatch evidence after deterministic rollback
+command=STAGE5_GROUP_ID=stage5-failure-evidence-20260813T124200Z STAGE5_FAIL_ON_GAME_ID=6786624814 ./scripts/run-stage5-consumer.sh
+executed_at_utc=2026-08-13T12:47:55Z
+measured_jar_sha256=eb9851ab97d11879a7eaf22746f5be105a7e63aeceb602ff33ca540d1fa967e4
+consumer_script_sha256=323125b4ad0d14e313df829e1146828346e0d11c989c4422954e89877b1ed5d3

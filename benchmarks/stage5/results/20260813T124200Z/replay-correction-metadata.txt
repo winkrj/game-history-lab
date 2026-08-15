@@ -1,0 +1,5 @@
+correction_reason=original replay group used latest and consumed zero records
+correction_command=STAGE5_GROUP_ID=stage5-replay-corrected-20260813T124200Z STAGE5_AUTO_OFFSET_RESET=earliest ./scripts/run-stage5-consumer.sh
+corrected_at_utc=2026-08-13T12:44:07Z
+measured_jar_sha256=eb9851ab97d11879a7eaf22746f5be105a7e63aeceb602ff33ca540d1fa967e4
+consumer_script_sha256=323125b4ad0d14e313df829e1146828346e0d11c989c4422954e89877b1ed5d3

@@ -1,0 +1,5 @@
+Variable_name	Value
+binlog_format	ROW
+binlog_row_image	FULL
+log_bin	ON
+server_id	223344
