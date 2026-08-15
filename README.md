@@ -220,7 +220,7 @@ DB transaction과 Kafka offset은 원자적으로 commit되지 않습니다. DB 
 
 - **Batch → CDC handoff gap:** `snapshot.mode=no_data`이므로 initial load 완료와 connector 시작 위치를 잘못 조율하면 변경을 놓칠 수 있습니다.
 - **Delete / re-parent semantics:** 현재 Source에는 합의된 delete/soft-delete 또는 round 이동 계약이 없습니다.
-- **Poison message / retry / DLQ:** 기본 consumer failure는 process를 멈추며 수동 restart가 필요합니다.
+- **Poison message / retry / DLQ:** 기본 consumer failure는 listener container를 멈추며 수동 restart가 필요합니다.
 - **Atomic rebuild publication:** 최초 적재와 chunk rebuild는 하나의 완전한 version으로 원자 공개되지 않습니다.
 - **Local Kafka/Connect persistence:** container recreation 시 broker record와 offset이 유지되지 않습니다.
 
