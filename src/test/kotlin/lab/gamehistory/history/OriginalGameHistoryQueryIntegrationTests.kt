@@ -35,7 +35,7 @@ class OriginalGameHistoryQueryIntegrationTests {
 
         assertEquals(
             listOf(
-                OriginalGameHistory(
+                GameHistoryResult(
                     gameId = 101,
                     shopId = 1,
                     playedAt = Instant.parse("2026-01-03T10:00:00Z"),
@@ -45,7 +45,7 @@ class OriginalGameHistoryQueryIntegrationTests {
                     roundCount = 0,
                     gameStatus = "CANCELLED",
                 ),
-                OriginalGameHistory(
+                GameHistoryResult(
                     gameId = 100,
                     shopId = 1,
                     playedAt = Instant.parse("2026-01-03T10:00:00Z"),
@@ -55,7 +55,7 @@ class OriginalGameHistoryQueryIntegrationTests {
                     roundCount = 2,
                     gameStatus = "COMPLETED",
                 ),
-                OriginalGameHistory(
+                GameHistoryResult(
                     gameId = 102,
                     shopId = 1,
                     playedAt = Instant.parse("2026-01-01T00:00:00Z"),
@@ -95,4 +95,3 @@ class OriginalGameHistoryQueryIntegrationTests {
         }
     }
 }
-

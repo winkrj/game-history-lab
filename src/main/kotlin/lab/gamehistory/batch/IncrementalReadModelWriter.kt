@@ -1,6 +1,6 @@
 package lab.gamehistory.batch
 
-import lab.gamehistory.history.GameHistoryProjectionUpdater
+import lab.gamehistory.projection.GameHistoryProjectionUpdater
 import org.springframework.batch.infrastructure.item.Chunk
 import org.springframework.batch.infrastructure.item.ItemWriter
 

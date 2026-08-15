@@ -1,6 +1,6 @@
 package lab.gamehistory.batch
 
-import lab.gamehistory.history.GameHistoryProjectionUpdater
+import lab.gamehistory.projection.GameHistoryProjectionUpdater
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder

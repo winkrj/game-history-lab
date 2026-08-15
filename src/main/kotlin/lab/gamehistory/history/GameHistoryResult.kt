@@ -2,7 +2,7 @@ package lab.gamehistory.history
 
 import java.time.Instant
 
-data class OriginalGameHistory(
+data class GameHistoryResult(
     val gameId: Long,
     val shopId: Long,
     val playedAt: Instant,
@@ -12,4 +12,3 @@ data class OriginalGameHistory(
     val roundCount: Long,
     val gameStatus: String,
 )
-

@@ -1,7 +1,7 @@
 package lab.gamehistory.cdc
 
 import lab.gamehistory.TestcontainersConfiguration
-import lab.gamehistory.history.GameHistoryProjectionUpdater
+import lab.gamehistory.projection.GameHistoryProjectionUpdater
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

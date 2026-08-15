@@ -18,7 +18,7 @@ class OriginalGameHistoryQuery(
         toExclusive: Instant,
         limit: Int,
         offset: Long,
-    ): List<OriginalGameHistory> {
+    ): List<GameHistoryResult> {
         require(fromInclusive < toExclusive) { "fromInclusive must be earlier than toExclusive" }
         require(limit > 0) { "limit must be positive" }
         require(offset >= 0) { "offset must not be negative" }
@@ -30,20 +30,7 @@ class OriginalGameHistoryQuery(
             .addValue("limit", limit)
             .addValue("offset", offset)
 
-        return jdbcTemplate.query(SELECT_GAME_HISTORY, parameters) { resultSet, _ ->
-            OriginalGameHistory(
-                gameId = resultSet.getLong("game_id"),
-                shopId = resultSet.getLong("shop_id"),
-                playedAt = resultSet
-                    .getObject("played_at", LocalDateTime::class.java)
-                    .toInstant(ZoneOffset.UTC),
-                playerNickname = resultSet.getString("player_nickname"),
-                courseName = resultSet.getString("course_name"),
-                totalScore = resultSet.getLong("total_score"),
-                roundCount = resultSet.getLong("round_count"),
-                gameStatus = resultSet.getString("game_status"),
-            )
-        }
+        return jdbcTemplate.query(SELECT_GAME_HISTORY, parameters, GameHistoryRowMapper)
     }
 
     private companion object {

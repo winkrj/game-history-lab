@@ -1,4 +1,4 @@
-package lab.gamehistory.history
+package lab.gamehistory.projection
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate

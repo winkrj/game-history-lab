@@ -1,6 +1,6 @@
 package lab.gamehistory.cdc
 
-import lab.gamehistory.history.GameHistoryProjectionUpdater
+import lab.gamehistory.projection.GameHistoryProjectionUpdater
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
