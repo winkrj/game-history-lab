@@ -37,6 +37,9 @@ class IncrementalGameHistoryBatchIntegrationTests {
     @Autowired
     private lateinit var jdbcTemplate: JdbcTemplate
 
+    @Autowired
+    private lateinit var checkpointStore: IncrementalCheckpointStore
+
     @BeforeEach
     fun prepareFixture() {
         dataSource.connection.use { connection ->
@@ -109,7 +112,9 @@ class IncrementalGameHistoryBatchIntegrationTests {
 
         assertEquals(BatchStatus.FAILED, failed.status)
         val failedStep = failed.stepExecutions.single()
+        assertEquals(6, failedStep.readCount)
         assertEquals(4, failedStep.writeCount)
+        assertEquals(2, failedStep.commitCount)
         assertEquals(1, failedStep.rollbackCount)
         assertEquals(LOWER, checkpointUpdatedAt())
 
@@ -121,6 +126,18 @@ class IncrementalGameHistoryBatchIntegrationTests {
         assertEquals(4, restarted.stepExecutions.first { it.stepName == "processIncrementalChangesStep" }.writeCount)
         assertEquals(UPPER, checkpointUpdatedAt())
         assertProjectionMatchesSource()
+    }
+
+    @Test
+    fun readsAndAdvancesTheDurableCursorMonotonically() {
+        val next = IncrementalCursor(LOWER.plusMinutes(1), 10)
+
+        assertEquals(IncrementalCursor(LOWER, 0), checkpointStore.current())
+
+        checkpointStore.advanceTo(next)
+        checkpointStore.advanceTo(IncrementalCursor(LOWER, Long.MAX_VALUE))
+
+        assertEquals(next, checkpointStore.current())
     }
 
     private fun launch(runId: String, upper: LocalDateTime, failAfterCount: Long = 0) =

@@ -21,6 +21,7 @@ class Stage4IncrementalCommand(
     @Qualifier("incrementalGameHistoryReadModelJob")
     private val incrementalJob: Job,
     private val jdbcTemplate: JdbcTemplate,
+    private val checkpointStore: IncrementalCheckpointStore,
     @Value("\${stage4.incremental.run-id:manual}") private val runId: String,
     @Value("\${stage4.incremental.upper-updated-at:}") private val requestedUpperUpdatedAt: String,
     @Value("\${stage4.incremental.overlap-seconds:300}") private val overlapSeconds: Long,
@@ -32,18 +33,7 @@ class Stage4IncrementalCommand(
         require(overlapSeconds >= 0) { "overlap-seconds must not be negative" }
         require(failAfterCount >= 0) { "fail-after-count must not be negative" }
 
-        val checkpoint = jdbcTemplate.queryForObject(
-            """
-                SELECT cursor_updated_at, cursor_game_id
-                FROM incremental_read_model_checkpoint
-                WHERE checkpoint_name = 'game-history'
-            """.trimIndent(),
-        ) { resultSet, _ ->
-            Cursor(
-                updatedAt = resultSet.getObject("cursor_updated_at", LocalDateTime::class.java),
-                gameId = resultSet.getLong("cursor_game_id"),
-            )
-        } ?: error("incremental checkpoint is missing")
+        val checkpoint = checkpointStore.current()
 
         val lowerUpdatedAt = checkpoint.updatedAt.minusSeconds(overlapSeconds)
         val lowerGameId = if (overlapSeconds == 0L) checkpoint.gameId else 0L
@@ -87,9 +77,4 @@ class Stage4IncrementalCommand(
             throw IllegalStateException("Stage 4 incremental batch failed: ${execution.exitStatus.exitDescription}")
         }
     }
-
-    private data class Cursor(
-        val updatedAt: LocalDateTime,
-        val gameId: Long,
-    )
 }
