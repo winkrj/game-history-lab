@@ -8,6 +8,12 @@ cd "$project_root"
 read_model_db_user="${READ_MODEL_DB_USERNAME:-game_history}"
 read_model_db_password="${READ_MODEL_DB_PASSWORD:-game_history}"
 read_model_db_name="${READ_MODEL_DB_NAME:-game_history_lab}"
+skip_representative_pages="${READ_MODEL_CHECK_SKIP_PAGES:-false}"
+
+if [[ "$skip_representative_pages" != "true" && "$skip_representative_pages" != "false" ]]; then
+    echo "READ_MODEL_CHECK_SKIP_PAGES must be true or false." >&2
+    exit 2
+fi
 
 mysql_client=(
     docker compose exec -T
@@ -151,9 +157,11 @@ compare_page() {
     fi
 }
 
-compare_page "shop1_recent7d_page0" "2025-12-25 00:00:00.000000" 0
-compare_page "shop1_recent3mo_page0" "2025-10-01 00:00:00.000000" 0
-compare_page "shop1_recent3mo_page100" "2025-10-01 00:00:00.000000" 2000
+if [[ "$skip_representative_pages" == "false" ]]; then
+    compare_page "shop1_recent7d_page0" "2025-12-25 00:00:00.000000" 0
+    compare_page "shop1_recent3mo_page0" "2025-10-01 00:00:00.000000" 0
+    compare_page "shop1_recent3mo_page100" "2025-10-01 00:00:00.000000" 2000
+fi
 
 "${mysql_client[@]}" --table --execute "
     SELECT 'source_games' AS metric, COUNT(*) AS value FROM games
@@ -163,4 +171,8 @@ compare_page "shop1_recent3mo_page100" "2025-10-01 00:00:00.000000" 2000
     SELECT 'popular_shop_1_rows', COUNT(*) FROM game_history_read_model WHERE shop_id = 1;
 "
 
-echo "Stage 2 Read Model verification passed: all $read_model_rows rows and three representative pages match the Source projection."
+if [[ "$skip_representative_pages" == "true" ]]; then
+    echo "Read Model verification passed: all $read_model_rows rows match the Source projection."
+else
+    echo "Stage 2 Read Model verification passed: all $read_model_rows rows and three representative pages match the Source projection."
+fi
