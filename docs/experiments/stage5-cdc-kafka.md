@@ -43,7 +43,7 @@ The measured host was an Apple M1 laptop with eight cores and 16 GB memory, macO
 
 Compose enables a pinned MySQL server ID, row binlog, and full row images. `prepare-stage5-cdc.sh` explicitly creates the Debezium user and replication grants on every setup; it does not rely on first-volume initialization. The connector captures only `games`, `rounds`, and `round_scores`, excludes schema-change records, and uses `snapshot.mode=no_data`.
 
-`no_data` is deliberate: Spring Batch owns the one-million-row initial load and CDC starts from the connector position. It does not solve the handoff between a completed Batch load and connector start. A change committed in an incorrectly coordinated handoff can be missed; Snapshot + Catch-up was not implemented.
+`no_data` is deliberate: Spring Batch owns the one-million-row initial load and CDC starts from the connector position. This Stage 5 run did not solve the handoff between a completed Batch load and connector start. The follow-up [Batch → CDC handoff experiment](batch-cdc-handoff.md) reproduced that gap and verified capture-first catch-up in the local one-partition setup.
 
 ## Kafka Configuration
 
@@ -136,7 +136,7 @@ The table topics do not provide global cross-topic ordering. In one transaction 
 
 Compared with incremental Batch, the CDC path adds a binlog configuration/retention responsibility, a replication user, Kafka broker, Connect worker, connector configuration and offsets, consumer group offsets/rebalances, three table schemas/topics, and manual restart behavior. Local startup order matters: connector status must be `RUNNING` before the workload begins. Broker/Connect state is ephemeral in the current Compose lab.
 
-The current direct row CDC path also couples the resolver to Source table identifiers and row keys, although it deliberately avoids coupling projection values to event payload. Delete/re-parent handling, DLQ/retry policy, poison records, monitoring, and Batch-to-CDC handoff remain explicit gaps.
+The current direct row CDC path also couples the resolver to Source table identifiers and row keys, although it deliberately avoids coupling projection values to event payload. Delete/re-parent handling, DLQ/retry policy, poison records, and monitoring remain explicit gaps. A local capture-first ordering was verified in the follow-up handoff experiment; durable production coordination remains separate.
 
 ## Batch vs CDC Responsibility
 
@@ -147,7 +147,7 @@ The two paths share projection meaning and are complementary. CDC does not repla
 
 ## Remaining Problems
 
-- Batch completion to `snapshot.mode=no_data` connector-start handoff has no Snapshot + Catch-up protocol.
+- The follow-up handoff experiment uses capture-first and bounded Consumer catch-up; atomic publication still remains separate.
 - DB projection commit and Kafka offset commit are two systems; replay is possible.
 - Consumer failure stops processing until restart; there is no retry/DLQ/poison-message policy.
 - Physical delete and game re-parent propagation are undefined.
@@ -164,7 +164,7 @@ That improvement is not free: Kafka and Connect consume substantial memory and i
 
 ## Next Question
 
-Stage 5 answers the current freshness question without requiring another feature immediately. Before productionization, the next evidence-driven question is which observed reliability gap matters first: Batch-to-CDC handoff, automatic poison-record recovery, or delete semantics. No next technology is selected here, and Outbox/Versioned Read Model/Snapshot + Catch-up are not pre-implemented.
+Stage 5 answers the current freshness question. A follow-up experiment then prevented the observed Batch-to-CDC change-loss gap under its local one-partition conditions with capture-first catch-up. Before productionization, the next evidence-driven question is durable handoff state, automatic poison-record recovery, delete semantics, or atomic Read Model publication.
 
 ## Provenance
 

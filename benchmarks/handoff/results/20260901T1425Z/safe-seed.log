@@ -1,0 +1,23 @@
+ Container game-history-lab-review-mysql-1  Running
+ Container game-history-lab-review-mysql-1  Waiting
+ Container game-history-lab-review-mysql-1  Healthy
+ Container game-history-lab-review-mysql-1  Running
+ Container game-history-lab-review-mysql-1  Waiting
+ Container game-history-lab-review-mysql-1  Healthy
+Generating deterministic Stage 1 data: games=1000 seed=20260810
++----------------------+-------+
+| metric               | value |
++----------------------+-------+
+| shops                |   100 |
+| games                |  1000 |
+| rounds               |  3600 |
+| round_scores         |  6900 |
+| popular_shop_1_games |   100 |
+| typical_shop_2_games |     9 |
++----------------------+-------+
++----------------------------+----------------------------+
+| first_played_at            | last_played_at             |
++----------------------------+----------------------------+
+| 2025-01-01 02:53:20.000000 | 2025-12-31 04:46:53.000000 |
++----------------------------+----------------------------+
+Stage 1 data verification passed.

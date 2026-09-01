@@ -1,0 +1,3 @@
+scenario	start_boundary_offset	target_offset	consumer_lag
+unsafe	0	1	0
+safe	1	2	0

@@ -82,9 +82,18 @@ DB 변경 감지 → gameId 확인 → 최신 원본 조회 → 조회용 데이
 
 같은 이벤트가 다시 전달돼도 현재 원본을 기준으로 덮어쓰기 때문에 결과는 달라지지 않습니다. DB 저장이 끝나기 전에 강제로 실패시킨 실험에서도 변경 내용이 되돌아갔고, 재시작 후 이벤트가 다시 전달돼 최종 상태가 원본과 일치했습니다.
 
+### 4. Batch보다 변경 수집을 먼저 시작했다
+
+`snapshot.mode=no_data` 커넥터를 Batch 뒤에 시작하자 그 전에 발생한 변경 1건이 그대로 누락됐습니다. 순서를 바꿔 커넥터가 실제 변경을 Kafka에 기록할 수 있는지 먼저 확인했습니다. Consumer를 멈춘 채 Batch를 실행하고, Batch 완료 뒤 Consumer 시작 전에 발생시킨 변경을 catch-up으로 반영했습니다.
+
+```text
+Connector 시작 → Batch 실행 → Source 변경 → Consumer catch-up → 전체 정합성 확인
+```
+
+한 partition으로 구성한 로컬 실험에서 START barrier 이후 end offset은 `1`, Batch 이후 목표 offset은 `2`였습니다. Consumer는 초기화된 topic의 `earliest`부터 읽었고, catch-up 뒤 lag는 `0`이었습니다. 최종적으로 1,000개 Source와 조회용 데이터가 모두 일치했습니다. 운영 환경에서는 이 경계를 모든 topic-partition별로 저장해야 합니다.
+
 ## 남은 과제
 
-- 전체 생성 완료와 CDC 시작 사이의 변경 누락 방지
 - 전체 재생성 결과를 한 번에 공개하는 방식
 - 삭제와 하위 데이터 이동 처리
 - 반복 실패 이벤트의 재시도·별도 보관
@@ -97,6 +106,7 @@ DB 변경 감지 → gameId 확인 → 최신 원본 조회 → 조회용 데이
 | 전체 생성·복구 | [Batch 구성](src/main/kotlin/lab/gamehistory/batch/GameHistoryReadModelBatchConfiguration.kt) | [복구 테스트](src/test/kotlin/lab/gamehistory/batch/GameHistoryReadModelBatchIntegrationTests.kt) · [실험 기록](docs/experiments/stage3-batch-recovery.md) |
 | 주기 갱신 | [Incremental Batch](src/main/kotlin/lab/gamehistory/batch/IncrementalGameHistoryBatchConfiguration.kt) | [재시작 테스트](src/test/kotlin/lab/gamehistory/batch/IncrementalGameHistoryBatchIntegrationTests.kt) · [실험 기록](docs/experiments/stage4-incremental-freshness.md) |
 | 실시간 갱신 | [Kafka Consumer](src/main/kotlin/lab/gamehistory/cdc/GameHistoryCdcConsumer.kt) | [트랜잭션 테스트](src/test/kotlin/lab/gamehistory/cdc/CdcConsumerTransactionIntegrationTests.kt) · [실험 기록](docs/experiments/stage5-cdc-kafka.md) |
+| Batch→CDC 전환 | [Handoff 실행](scripts/run-handoff-experiment.sh) | [누락 재현·전환 검증](docs/experiments/batch-cdc-handoff.md) |
 | 공통 계산 | [Projection Updater](src/main/kotlin/lab/gamehistory/projection/GameHistoryProjectionUpdater.kt) | [전체 비교](docs/final-comparison.md) |
 
 전체 빌드와 통합 테스트는 `./scripts/verify.sh`로 재현할 수 있습니다.

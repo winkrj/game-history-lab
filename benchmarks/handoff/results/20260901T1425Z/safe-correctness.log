@@ -1,0 +1,8 @@
++---------------------+-------+
+| metric              | value |
++---------------------+-------+
+| source_games        |  1000 |
+| read_model_rows     |  1000 |
+| popular_shop_1_rows |   100 |
++---------------------+-------+
+Read Model verification passed: all 1000 rows match the Source projection.

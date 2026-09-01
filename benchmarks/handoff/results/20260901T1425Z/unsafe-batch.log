@@ -1,0 +1,29 @@
+ Container game-history-lab-review-mysql-1  Running
+ Container game-history-lab-review-mysql-1  Waiting
+ Container game-history-lab-review-mysql-1  Healthy
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.0)
+
+2026-09-01T23:33:51.093+09:00  INFO 59871 --- [game-history-lab] [           main] l.g.GameHistoryLabApplicationKt          : Starting GameHistoryLabApplicationKt v0.0.1-SNAPSHOT using Java 21.0.5 with PID 59871 (/private/tmp/game-history-lab-review/build/libs/game-history-lab-0.0.1-SNAPSHOT.jar started by hongseungjun in /private/tmp/game-history-lab-review)
+2026-09-01T23:33:51.096+09:00  INFO 59871 --- [game-history-lab] [           main] l.g.GameHistoryLabApplicationKt          : No active profile set, falling back to 1 default profile: "default"
+2026-09-01T23:33:51.789+09:00  INFO 59871 --- [game-history-lab] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-09-01T23:33:52.030+09:00  INFO 59871 --- [game-history-lab] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1b17d8ab
+2026-09-01T23:33:52.031+09:00  INFO 59871 --- [game-history-lab] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-09-01T23:33:52.168+09:00  WARN 59871 --- [game-history-lab] [           main] o.s.b.c.l.AbstractListenerFactoryBean    : org.springframework.batch.infrastructure.item.ItemProcessor is an interface. The implementing class will not be queried for annotation based listener configurations. If using @StepScope on a @Bean method, be sure to return the implementing class so listener annotations can be used.
+2026-09-01T23:33:52.181+09:00  WARN 59871 --- [game-history-lab] [           main] o.s.b.c.l.AbstractListenerFactoryBean    : org.springframework.batch.infrastructure.item.ItemProcessor is an interface. The implementing class will not be queried for annotation based listener configurations. If using @StepScope on a @Bean method, be sure to return the implementing class so listener annotations can be used.
+2026-09-01T23:33:52.319+09:00  INFO 59871 --- [game-history-lab] [           main] l.g.GameHistoryLabApplicationKt          : Started GameHistoryLabApplicationKt in 1.49 seconds (process running for 1.784)
+2026-09-01T23:33:52.418+09:00  INFO 59871 --- [game-history-lab] [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=gameHistoryReadModelJob]] launched with the following parameters: [{JobParameter{name='mode', value=full, type=class java.lang.String, identifying=true},JobParameter{name='failAfterGameId', value=0, type=class java.lang.Long, identifying=false},JobParameter{name='minGameId', value=1, type=class java.lang.Long, identifying=true},JobParameter{name='maxGameId', value=1000, type=class java.lang.Long, identifying=true},JobParameter{name='runId', value=handoff-unsafe-20260901T1425Z, type=class java.lang.String, identifying=true}}]
+2026-09-01T23:33:52.456+09:00  INFO 59871 --- [game-history-lab] [           main] o.s.batch.core.step.AbstractStep         : Executing step: [buildReadModelStep]
+2026-09-01T23:33:52.558+09:00  INFO 59871 --- [game-history-lab] [           main] o.s.batch.core.step.AbstractStep         : Step: [buildReadModelStep] executed in 105ms
+2026-09-01T23:33:52.592+09:00  INFO 59871 --- [game-history-lab] [           main] o.s.b.c.l.s.TaskExecutorJobLauncher      : Job: [SimpleJob: [name=gameHistoryReadModelJob]] completed with the following parameters: [{JobParameter{name='mode', value=full, type=class java.lang.String, identifying=true},JobParameter{name='failAfterGameId', value=0, type=class java.lang.Long, identifying=false},JobParameter{name='minGameId', value=1, type=class java.lang.Long, identifying=true},JobParameter{name='maxGameId', value=1000, type=class java.lang.Long, identifying=true},JobParameter{name='runId', value=handoff-unsafe-20260901T1425Z, type=class java.lang.String, identifying=true}}] and the following status: [COMPLETED] in 159ms
+STAGE3_STEP name=buildReadModelStep status=COMPLETED read=1000 write=1000 commit=1 rollback=0
+STAGE3_JOB executionId=7 instanceId=7 status=COMPLETED exitCode=COMPLETED
+2026-09-01T23:33:52.600+09:00  INFO 59871 --- [game-history-lab] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-09-01T23:33:52.606+09:00  INFO 59871 --- [game-history-lab] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

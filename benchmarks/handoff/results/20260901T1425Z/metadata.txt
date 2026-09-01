@@ -1,0 +1,6 @@
+result_id=20260901T1425Z
+completed_at_utc=2026-09-01T14:48:57Z
+git_commit=9b488d149fba8bbd11c633184799ee7992ee407c
+seed_game_count=1000
+snapshot_mode=no_data
+safe_order=connector-start,batch,source-change,consumer-catch-up

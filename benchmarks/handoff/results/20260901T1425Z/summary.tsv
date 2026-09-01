@@ -1,0 +1,3 @@
+scenario	connector_before_batch	source_status	projection_status	mismatch
+unsafe	0	CANCELLED	COMPLETED	1
+safe	1	CANCELLED	CANCELLED	0

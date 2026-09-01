@@ -21,6 +21,7 @@ Spring Batch는 조회를 더 빠르게 만드는 기술이 아니라 1M bulk �
 - [Stage 3 experiment](experiments/stage3-batch-recovery.md), [operational comparison](../benchmarks/stage3/results/20260812T111000Z/summarized/comparison.tsv)
 - [Stage 4 experiment](experiments/stage4-incremental-freshness.md), [cadence summary](../benchmarks/stage4/results/20260812T124000Z/summarized/cadence-summary.tsv)
 - [Stage 5 experiment](experiments/stage5-cdc-kafka.md), [freshness summary](../benchmarks/stage5/results/20260813T124200Z/summarized/freshness-summary.tsv)
+- [Batch → CDC handoff](experiments/batch-cdc-handoff.md), [ordering comparison](../benchmarks/handoff/results/20260901T1425Z/summary.tsv)
 
 ## Architecture Evolution
 
@@ -312,6 +313,7 @@ Batch와 CDC는 같은 문제의 경쟁 해법이 아니다. Batch가 한 번에
 | Incremental replay | 이미 반영한 game 재처리 | one affected game을 다시 Source projection UPSERT | 별도 복구 불필요 | checksum `15319432641` 전후 동일 |
 | Kafka duplicate/replay | fresh `earliest` group으로 retained records replay | 31 records applied, final group lag 0 | idempotent whole-row UPSERT | checksum `3287816278` 전후 동일 |
 | Kafka consumer failure | UPSERT 뒤 listener exception | JDBC rollback; Source `IN_PROGRESS`, projection `COMPLETED`; offset 25/log-end 26/lag 1 | 같은 group process restart 및 redelivery | projection `IN_PROGRESS`; offset 26/lag 0; full equality 통과 |
+| Batch → CDC handoff | Batch 뒤 `no_data` Connector 시작 | Source `CANCELLED`, projection `COMPLETED`; mismatch 1 | Connector START barrier → Batch → Consumer catch-up | one-partition target offset 2, lag 0, 1,000 rows equality |
 
 이 표는 “장애를 고려했다”는 설계 주장이 아니라 retained raw logs에서 실제로 실패시키고 관찰한 범위다. 다만 atomic rebuild publication, broker outage, poison-message loop 같은 장애는 실행하지 않았다.
 
@@ -322,7 +324,7 @@ Batch와 CDC는 같은 문제의 경쟁 해법이 아니다. Batch가 한 번에
 | Redis | Read Model index lookup만으로 조회 병목이 충분히 제거됐다. cache consistency라는 새 문제를 추가할 측정 근거가 없었다. |
 | Transactional Outbox | application business event publish를 만들지 않고 MySQL binlog CDC를 검증했다. Outbox가 필요한 별도 event-contract/dual-write 문제는 실험하지 않았다. |
 | Versioned Read Model / shadow swap | rebuild의 partial visibility는 남아 있지만 Stage 3의 bulk restart와 Stage 5 freshness 질문과는 별도 문제다. atomic publication 요구가 확정되지 않았다. |
-| Snapshot + Catch-up | `no_data` connector의 Batch→CDC handoff gap은 확인했지만 실제 무중단 handoff 요구와 실패 실험은 아직 없다. |
+| Debezium data snapshot | Batch가 initial load를 담당하므로 `no_data`를 유지했다. Connector-first catch-up은 로컬 단일 partition에서 검증했고, 운영용 partition별 경계 영속화는 별도 과제로 남겼다. |
 | Complex retry/DLQ | 기본 failure-stop과 same-group redelivery를 먼저 확인했다. poison-message 정책 요구 없이 framework를 선행하지 않았다. |
 | Kubernetes / multi-broker Kafka | 로컬 구조·correctness·freshness 비교가 목적이었다. 배포, HA, capacity 문제를 측정하지 않았다. |
 
@@ -332,7 +334,6 @@ Batch와 CDC는 같은 문제의 경쟁 해법이 아니다. Batch가 한 번에
 
 | 문제 | 현재 영향 | 아직 해결하지 않은 이유 | 다음 실험 조건 |
 | --- | --- | --- | --- |
-| Batch → CDC handoff gap | `snapshot.mode=no_data` 시작 위치를 잘못 조율하면 change 누락 가능 | Snapshot + Catch-up을 Stage 5 freshness 질문에 섞지 않음 | 무중단 initial load/rebuild와 no-gap handoff가 요구될 때 |
 | Physical delete semantics | UPSERT-only projection에 stale row가 남을 수 있음 | Source의 delete/soft-delete 계약 자체가 없음 | 삭제를 대표 API에 반영해야 하는 business rule이 정해질 때 |
 | Re-parent semantics | round의 old/new game 양쪽 projection을 갱신하지 않을 수 있음 | 현재 workload에 관계 이동이 없음 | round 이동이 허용되고 correctness 사례가 생길 때 |
 | Poison message | stopping error handler 때문에 수동 restart가 필요하고 동일 record가 반복 실패할 수 있음 | retry/DLQ 정책을 선행하지 않음 | 자동 recovery 시간과 격리 정책이 요구될 때 |
