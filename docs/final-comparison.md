@@ -24,7 +24,7 @@ Spring Batch는 조회를 더 빠르게 만드는 기술이 아니라 1M bulk �
 
 ## Architecture Evolution
 
-`PROJECT_DESIGN.md`에서는 continuous CDC를 다음 후보 단계로 기술했지만, 실제 구현에서는 그 전에 periodic polling의 충분성과 한계를 확인하는 Incremental Batch 실험을 Stage 4로 삽입했고 CDC를 Stage 5로 진행했다. 아래 순서는 이 최종 실험 번호를 따른다. 즉 설계서의 후보 기술을 그대로 실행한 것이 아니라 freshness requirement를 한 단계 더 검증한 결과다.
+초기에는 continuous CDC를 다음 후보 단계로 검토했지만, 실제 구현에서는 그 전에 periodic polling의 충분성과 한계를 확인하는 Incremental Batch 실험을 Stage 4로 삽입했고 CDC를 Stage 5로 진행했다. 아래 순서는 이 최종 실험 번호를 따른다. 즉 후보 기술을 그대로 도입한 것이 아니라 freshness requirement를 한 단계 더 검증한 결과다.
 
 ## Stage 1 — Original JOIN
 
@@ -101,7 +101,7 @@ Stage 1 수치를 재사용하지 않고 같은 Stage 2 jar/DB에서 Original과
 
 Original plan은 여전히 네 table, 177,689 joined rows, aggregate, temporary, filesort를 사용했다. Read Model plan은 `idx_game_history_shop_played_at`의 단일 ordered range scan이었고 request-time JOIN, aggregate, temporary, filesort가 없었다. EXPLAIN ANALYZE에서 3개월 page 0은 Original 2,340ms 대 Read Model 0.360ms, page 100은 1,882ms 대 12.6ms였다. page 100의 2,020-row offset traversal은 남았지만 child-row multiplication은 제거됐다.
 
-실제 1M Source projection의 누락·extra·필드 mismatch와 세 대표 page 차이는 모두 0이었다. Stage 2 experiment narrative에 기록된 SQL build 세 관찰은 25.3001–42.2492초였다. 이 timing은 Stage 2 raw result directory가 아니라 당시 experiment 문서와 `PROJECT_CONTEXT.md`에 보존되어 있어 새로 재구성하지 않았다.
+실제 1M Source projection의 누락·extra·필드 mismatch와 세 대표 page 차이는 모두 0이었다. Stage 2 experiment narrative에 기록된 SQL build 세 관찰은 25.3001–42.2492초였다. 이 timing은 Stage 2 raw result directory가 아니라 당시 실험 기록에 보존된 값이므로 새로 재구성하지 않았다.
 
 ### 해결된 것
 
