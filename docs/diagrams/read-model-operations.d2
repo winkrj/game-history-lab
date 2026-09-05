@@ -1,58 +1,48 @@
-# Render with:
-# d2 --theme=4 --pad=32 \
-#   docs/diagrams/read-model-operations.d2 \
-#   docs/diagrams/read-model-operations.svg
+# Editable semantic source for read-model-operations.svg
+# The checked-in SVG is hand-tuned for README width in an Excalidraw-style layout.
+# Render a structural preview with:
+# d2 --layout=elk --theme=4 --sketch --pad=48 \
+#   docs/diagrams/read-model-operations.d2 /tmp/read-model-operations-preview.svg
 
-grid-rows: 3
-grid-columns: 6
-grid-gap: 28
+direction: right
 
-classes: {
-  spacer: {
-    label: ""
-    width: 120
-    height: 60
-    style.opacity: 0
-  }
-}
-
-# Bulk / recovery lane
-spacer_1.class: spacer
-batch: Spring Batch\nBulk / recovery
-spacer_2.class: spacer
-spacer_3.class: spacer
-spacer_4.class: spacer
-spacer_5.class: spacer
-
-# Shared endpoints
-source: MySQL\nSource of truth {
+source: 원본 데이터\nMySQL 8.4\ngames · rounds · round_scores {
   shape: cylinder
 }
-spacer_6.class: spacer
-spacer_7.class: spacer
-spacer_8.class: spacer
-read_model: Read Model\nQuery data {
+
+batch: 대량 생성 · 복구\nSpring Batch\n최초 생성 · 전체 재생성 · 부분 복구
+
+change: 변경 감지 · 전달\nDebezium + Kafka\nbinlog 이벤트 보관
+
+apply: 변경 반영\nCDC Consumer\ngameId 추출 · 최신 원본 재계산
+
+read_model: 조회 전용 데이터\nRead Model\ngame당 1행 {
   shape: cylinder
 }
-api: History API
 
-# Continuous update lane
-spacer_9.class: spacer
-debezium: Debezium
-kafka: Kafka {
-  shape: queue
+api: History API\n조회만
+
+source -> batch: 범위 읽기
+batch -> read_model: 범위 단위 UPSERT
+
+source -> change: binlog
+change -> apply: 이벤트
+apply -> source: 최신 원본 다시 조회 {
+  style.stroke-dash: 7
 }
-consumer: Consumer
-updater: Projection updater\nRe-read source
-spacer_10.class: spacer
+apply -> read_model: 전체 행 UPSERT
 
-source -> batch: initial · rebuild · repair
-batch -> read_model: UPSERT
+read_model -> api: 조회
 
-source -> debezium: binlog
-debezium -> kafka
-kafka -> consumer
-consumer -> updater
-updater -> read_model: UPSERT
+handoff: |md
+  **누락 없는 전환 순서**<br/>
+  변경 수집 시작 → Batch 생성 → Consumer catch-up
+| {
+  near: bottom-center
+  style.stroke-dash: 5
+}
 
-read_model -> api: query
+lab: LOCAL LAB\nrepository-configured {
+  near: top-right
+  style.stroke-dash: 5
+}
