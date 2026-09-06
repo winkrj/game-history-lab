@@ -2,9 +2,11 @@
 
 [![Verify](https://github.com/winkrj/game-history-lab/actions/workflows/verify.yml/badge.svg)](https://github.com/winkrj/game-history-lab/actions/workflows/verify.yml)
 
-게임 이력 조회 결과를 미리 계산한 테이블(Read Model)로 분리해 응답 시간을 줄이고, 그 데이터를 **생성·복구·동기화하는 과정**을 100만 건으로 검증한 프로젝트입니다.
+게임 이력을 조회할 때마다 여러 테이블을 조인하고 집계하던 구조를, 조회 결과를 미리 계산한 테이블(Read Model)로 분리한 실험 프로젝트입니다. 100만 건의 게임 데이터로 조회 성능을 비교하고, 조회용 데이터를 **생성하고 실패 후 복구하며 원본 변경과 동기화하는 과정**까지 검증했습니다.
 
 `Kotlin` · `Spring Boot` · `MySQL` · `Spring Batch` · `Debezium` · `Kafka`
+
+아래 수치는 로컬 비교 실험 결과입니다. 조회 성능과 CDC 반영 지연은 서로 다른 실험에서 측정했으며, 운영 환경의 처리 용량을 뜻하지 않습니다.
 
 | 3개월 조회 p95 | 요청당 읽은 행 | 원본 변경 반영 |
 | ---: | ---: | ---: |
@@ -12,7 +14,7 @@
 
 ## 구조
 
-조회 병목을 없앤 뒤 남은 문제는 조회용 데이터를 어떻게 만들고, 실패하면 어디서 다시 시작하며, 이후 변경을 어떻게 따라잡을지였습니다.
+조회 경로에서 조인과 집계를 줄이면 응답은 빨라지지만, 미리 계산한 데이터를 관리해야 하는 일이 남습니다. 최초 데이터를 만드는 작업, 중단된 작업을 복구하는 과정, 이후 원본 변경을 따라가는 역할을 나눴습니다.
 
 ![게임 이력 조회용 데이터 생성과 변경 반영 구조](docs/diagrams/read-model-operations.svg)
 
@@ -73,8 +75,10 @@
 | 실시간 갱신 | [Kafka Consumer](src/main/kotlin/lab/gamehistory/cdc/GameHistoryCdcConsumer.kt) | [Stage 5](docs/experiments/stage5-cdc-kafka.md) |
 | 공통 재계산 | [Projection Updater](src/main/kotlin/lab/gamehistory/projection/GameHistoryProjectionUpdater.kt) | [최종 비교](docs/final-comparison.md) |
 
-전체 빌드와 통합 테스트는 다음 명령으로 재현할 수 있습니다.
+JDK 21과 Docker Compose를 사용할 수 있는 환경에서 Docker를 실행한 뒤, 저장소 루트에서 다음 명령으로 빌드와 통합 테스트를 확인할 수 있습니다. 테스트에는 Testcontainers를 사용합니다.
 
 ```bash
 ./scripts/verify.sh
 ```
+
+이 명령은 Compose 설정 검사와 Gradle `clean check`를 실행합니다. 100만 건 데이터 생성이나 성능 실험 전체를 실행하는 명령은 아닙니다. 단계별 준비와 실행 방법은 위 실험 기록을 따릅니다.
