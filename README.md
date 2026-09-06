@@ -23,31 +23,31 @@
 - **CDC Consumer**는 이벤트에서 `gameId`만 꺼내 최신 원본을 다시 계산합니다.
 - 조회 API는 `game_history_read_model`만 읽습니다.
 
-## 왜 이렇게 나눴나
+## 설계 의도
 
-### Batch는 속도가 아니라 복구를 위해 선택했다
+### Spring Batch 기반 재시작과 부분 복구
 
 `TRUNCATE → INSERT SELECT`는 단순하지만 작업 상태가 남지 않았습니다. Spring Batch의 JobRepository와 chunk checkpoint를 사용해 실패 지점부터 재시작하고, 필요한 범위만 다시 만들 수 있게 했습니다.
 
 250,001번째 게임에서 작업을 중단하자 250,000건과 checkpoint가 남았습니다. 같은 작업을 다시 실행했을 때 이미 처리한 구간은 건너뛰고 나머지 750,000건만 처리했습니다.
 
-### Kafka를 넣기 전에 주기 작업의 한계를 확인했다
+### 주기 갱신의 한계와 Kafka 도입
 
 변경이 드물고 5~10분 지연을 허용한다면 Incremental Batch가 더 단순합니다. 하지만 수 초 단위 반영을 위해 주기를 1분까지 줄이자 한 시간 동안 60회 실행 중 25회가 빈 작업이었고, 반영 지연도 약 59초였습니다.
 
 이 요구에서만 Debezium과 Kafka의 운영 비용을 감수할 이유가 생겼습니다.
 
-### 이벤트는 데이터가 아니라 재계산 신호로 사용했다
+### 이벤트 기반 최신 원본 재계산
 
 조회 결과는 `games`, `rounds`, `round_scores` 세 테이블의 조합입니다. CDC payload를 직접 합치지 않고, 이벤트에서는 영향받은 `gameId`만 찾은 뒤 원본의 최신 상태를 다시 읽어 한 행 전체를 UPSERT합니다.
 
 같은 이벤트가 다시 전달돼도 현재 원본으로 덮어쓰기 때문에 결과가 달라지지 않습니다.
 
-### 변경 수집을 Batch보다 먼저 시작했다
+### 변경 누락을 방지하는 초기화 순서
 
 `snapshot.mode=no_data` Connector를 Batch 뒤에 시작했을 때 그 사이의 변경 1건이 누락됐습니다. 순서를 `Connector 시작 → Batch 생성 → Consumer catch-up`으로 바꾼 뒤 lag 0과 전체 데이터 일치를 확인했습니다.
 
-## 실패로 확인한 것
+## 복구와 데이터 정합성 검증
 
 | 시나리오 | 확인 결과 | 근거 |
 | --- | --- | --- |
@@ -57,7 +57,7 @@
 | Consumer 트랜잭션 실패 | 롤백 후 재전달, 최종 결과 일치 | [트랜잭션 테스트](src/test/kotlin/lab/gamehistory/cdc/CdcConsumerTransactionIntegrationTests.kt) |
 | Batch와 CDC 전환 중 변경 | catch-up 후 lag 0, 전체 값 일치 | [Handoff 실험](docs/experiments/batch-cdc-handoff.md) |
 
-## 아직 증명하지 않은 것
+## 실험 범위와 한계
 
 이 저장소는 로컬 환경에서 책임 분리와 실패 복구를 검증한 실험입니다. 아래 항목까지 해결한 운영 시스템이라고 주장하지 않습니다.
 
